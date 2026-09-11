@@ -1,0 +1,32 @@
+{
+  "name": "Circuit IA — Asistente de Electrónica",
+  "short_name": "Circuit IA",
+  "description": "Asistente inteligente de electrónica para estudiantes: consulta circuitos, materiales y conexiones paso a paso.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#EFF6FF",
+  "theme_color": "#1E40AF",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

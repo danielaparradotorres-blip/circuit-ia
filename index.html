@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circuit IA — Tu Asistente de Electrónica</title>
+
+    <!-- === Configuración PWA (app instalable) === -->
+    <meta name="description" content="Circuit IA — Asistente inteligente de electrónica para estudiantes. Consulta circuitos, materiales y conexiones paso a paso.">
+    <meta name="theme-color" content="#1E40AF">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Circuit IA">
+    <meta name="mobile-web-app-capable" content="yes">
+    <!-- === Fin configuración PWA === -->
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1E40AF',
+                        secondary: '#2563EB',
+                        accent: '#38BDF8',
+                        dark: '#0F172A',
+                        light: '#EFF6FF',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Roboto', 'system-ui', 'sans-serif'],
+                        display: ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .scrollbar-hide::-webkit-scrollbar {
+                display: none;
+            }
+            .scrollbar-hide {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .chat-bubble-user {
+                @apply bg-secondary/10 text-gray-800 rounded-2xl rounded-tr-sm px-4 py-3 shadow-md;
+            }
+            .chat-bubble-ai {
+                @apply bg-gradient-to-r from-primary to-secondary text-white rounded-2xl rounded-tl-sm px-4 py-3 shadow-lg;
+            }
+            .materials-box {
+                @apply bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl p-3 my-3;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-gray-800 antialiased">
+    <div class="flex flex-col h-screen max-w-5xl mx-auto shadow-2xl bg-white">
+        <header class="bg-gradient-to-r from-primary to-secondary text-white p-4 shadow-md">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-md">
+                        <img src="data:image/jpeg;base64,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" alt="Logo Circuit IA" class="w-8 h-8 object-contain">
+                    </div>
+                    <div>
+                        <h1 class="font-display font-bold text-xl tracking-tight">CIRCUIT <span class="text-accent">IA</span></h1>
+                        <p class="text-xs text-blue-100">Asistente Inteligente de Electrónica</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button id="btnInstall" class="hidden items-center bg-white/15 hover:bg-white/25 transition-colors text-sm px-3 py-1.5 rounded-lg border border-white/30">
+                        <i class="fa fa-download mr-1"></i> Instalar app
+                    </button>
+                    <button id="btnClear" class="text-white/80 hover:text-white transition-colors text-sm">
+                        <i class="fa fa-trash-o mr-1"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main id="chatContainer" class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 scrollbar-hide">
+            <div class="flex gap-3 animate-fade-in">
+                <div class="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white">
+                    <i class="fa fa-microchip"></i>
+                </div>
+                <div class="chat-bubble-ai max-w-[85%]">
+                    <p class="font-semibold mb-2">¡Hola! Soy <strong>Circuit IA</strong> 👋</p>
+                    <p class="mb-2">Tu asistente especializado en <strong>circuitos electrónicos</strong>. Estoy aquí para ayudarte a diseñar, analizar y entender cualquier proyecto de electrónica.</p>
+                    <p class="text-blue-100 text-sm">💡 Pregúntame sobre cualquier circuito y te daré: <strong>materiales necesarios</strong> + <strong>explicación paso a paso</strong> + <strong>funcionamiento</strong>.</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="border-t border-slate-200 p-4 bg-white">
+            <form id="chatForm" class="flex gap-2 items-center">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="Escribe tu consulta sobre electrónica o circuitos aquí..." 
+                    class="flex-1 px-4 py-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-base"
+                    required
+                >
+                <button 
+                    type="submit" 
+                    class="bg-primary hover:bg-secondary text-white rounded-xl px-5 py-3 transition-all shadow-md hover:shadow-lg active:scale-95"
+                >
+                    <i class="fa fa-paper-plane"></i>
+                </button>
+            </form>
+            <p class="text-xs text-slate-400 mt-2 text-center">Circuit IA — Respuestas precisas para estudiantes de electrónica</p>
+        </footer>
+    </div>
+
+    <script>
+        const knowledgeBase = [
+            {
+                keywords: ["led", "encender led", "parpadear led", "led arduino", "prender luz"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Cable USB tipo B",
+                    "LED de 5mm (cualquier color)",
+                    "Resistor de 220Ω (rojo-rojo-marrón)",
+                    "Cables puente macho-macho x2",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Encender y hacer parpadear un LED con Arduino.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• Ánodo del LED (pata larga) → Resistor 220Ω → Pin digital 13<br>
+• Cátodo del LED (pata corta) → GND (tierra)<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El Arduino envía 5V por el pin 13. El resistor limita la corriente para no quemar el LED. Al alternar entre HIGH y LOW, el LED parpadea.
+                `
+            },
+            {
+                keywords: ["pulsador", "boton", "presionar", "detectar pulsacion"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Cable USB",
+                    "Pulsador / Botón 4 pines",
+                    "Resistor 10kΩ",
+                    "Resistor 220Ω",
+                    "LED 5mm",
+                    "Cables puente macho-macho x6",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Encender un LED al presionar un botón.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• Botón: un extremo → 5V, el otro → Pin 2 + Resistor 10kΩ → GND<br>
+• LED: Ánodo → Resistor 220Ω → Pin 13, Cátodo → GND<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+Sin presionar el botón, el pin 2 lee LOW (0V). Al presionar, recibe 5V y detecta HIGH, encendiendo el LED. El resistor de 10kΩ actúa como PULL-DOWN.
+                `
+            },
+            {
+                keywords: ["potenciometro", "brillo", "regular luz", "variar voltaje", "analogico"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Cable USB",
+                    "Potenciómetro 10kΩ",
+                    "LED 5mm",
+                    "Resistor 220Ω",
+                    "Cables puente macho-macho x5",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Controlar el brillo de un LED girando el potenciómetro.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• Potenciómetro: Pin 1 → 5V, Pin 2 → A0 (entrada analógica), Pin 3 → GND<br>
+• LED: Ánodo → Resistor 220Ω → Pin 9 (PWM), Cátodo → GND<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El potenciómetro entrega un voltaje variable (0-5V). Arduino lee ese valor (0-1023) por el pin A0 y lo convierte a PWM (0-255) para ajustar el brillo del LED.
+                `
+            },
+            {
+                keywords: ["motor", "motor dc", "girar motor", "controlar motor", "transistor", "relé"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Cable USB",
+                    "Motor DC 5-9V",
+                    "Transistor TIP120",
+                    "Diodo 1N4007",
+                    "Resistor 1kΩ",
+                    "Fuente externa 6-9V",
+                    "Cables puente",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>⚠️ IMPORTANTE:</strong> Nunca conectes un motor directamente al Arduino, puede quemarlo. Usa un transistor como interruptor.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• Base del TIP120 → Resistor 1kΩ → Pin 9<br>
+• Colector → GND Arduino<br>
+• Emisor → GND Fuente externa<br>
+• Motor → Pin 9 (colector) y + Fuente externa<br>
+• Diodo en paralelo con el motor (cátodo al +)<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El Arduino controla el transistor que alimenta al motor con energía externa. El diodo protege contra picos de voltaje generados por el motor.
+                `
+            },
+            {
+                keywords: ["sensor distancia", "ultrasonico", "hc-sr04", "medir distancia", "obstaculos"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Sensor ultrasónico HC-SR04",
+                    "LED 5mm",
+                    "Resistor 220Ω",
+                    "Cables puente macho-macho x8",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Medir la distancia a objetos y encender un LED si están cerca.<br><br>
+<strong>🔌 Conexiones HC-SR04:</strong><br>
+• VCC → 5V | GND → GND | Trig → Pin 9 | Echo → Pin 10<br>
+• LED → Pin 13 con resistor 220Ω → GND<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El sensor emite un pulso ultrasónico y mide el tiempo en regresar. Con la velocidad del sonido calcula la distancia. Si es menor a 20cm, se enciende el LED.
+                `
+            },
+            {
+                keywords: ["display lcd", "pantalla", "mostrar texto", "lcd 16x2", "i2c"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Pantalla LCD 16x2 (con módulo I2C)",
+                    "Cables puente macho-macho x4",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Mostrar texto y datos en una pantalla LCD.<br><br>
+<strong>🔌 Conexiones (I2C):</strong><br>
+• VCC → 5V | GND → GND<br>
+• SDA → A4 | SCL → A5<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El módulo I2C simplifica las conexiones usando solo 2 cables de datos. Puedes mostrar mensajes, valores de sensores, contadores y más en 2 líneas de 16 caracteres.
+                `
+            },
+            {
+                keywords: ["servo", "motor servo", "girar angulo", "posicion", "90 grados", "180 grados"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Motor Servo (9g SG90 o similar)",
+                    "Cables puente macho-macho x3",
+                    "Fuente externa (recomendado para varios servos)"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Controlar la posición exacta de un servo (0° a 180°).<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• Cable ROJO → 5V<br>
+• Cable MARRÓN/NEGRO → GND<br>
+• Cable NARANJA/AMARILLO → Pin 9<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El servo recibe una señal PWM donde el ancho del pulso define el ángulo: 500µs = 0°, 1500µs = 90°, 2500µs = 180°. Solo necesita 1 cable de datos.
+                `
+            },
+            {
+                keywords: ["resistencias", "resistores", "codigo colores", "valor", "calcular resistencia"],
+                materiales: [
+                    "Resistores varios",
+                    "Tabla de código de colores",
+                    "Multímetro (opcional)"
+                ],
+                explicacion: `
+<strong>📋 Código de Colores de Resistencias:</strong><br>
+• Negro = 0 | Marrón = 1 | Rojo = 2 | Naranja = 3 | Amarillo = 4<br>
+• Verde = 5 | Azul = 6 | Violeta = 7 | Gris = 8 | Blanco = 9<br>
+• Dorado ±5% | Plateado ±10%<br><br>
+<strong>🔢 Fórmula:</strong> 2 primeros dígitos + multiplicador (10ⁿ) + tolerancia.<br>
+Ejemplo: Rojo-Rojo-Marrón = 22 × 10Ω = <strong>220Ω</strong>
+                `
+            },
+            {
+                keywords: ["protoboard", "tablero", "conexiones", "como funciona", "filas columnas"],
+                materiales: [
+                    "Protoboard",
+                    "Cables puente",
+                    "Componentes electrónicos"
+                ],
+                explicacion: `
+<strong>📌 ¿Cómo funciona una Protoboard?</strong><br>
+• <strong>Columnas centrales:</strong> Las 5 posiciones verticales de cada columna están CONECTADAS entre sí.<br>
+• <strong>Barra superior/inferior:</strong> Líneas horizontales de alimentación (+ y -), conectadas de extremo a extremo.<br>
+• <strong>El centro:</strong> Hay una línea divisoria que separa las dos mitades, NO están conectadas.<br><br>
+💡 Usa las barras para energía (+5V y GND) y las columnas para conectar componentes entre sí.
+                `
+            },
+            {
+                keywords: ["arduino", "que es arduino", "introduccion", "placa", "empezar"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Cable USB A-B",
+                    "Ordenador con Arduino IDE",
+                    "Protoboard y componentes básicos para practicar"
+                ],
+                explicacion: `
+<strong>🤖 ¿Qué es Arduino?</strong><br>
+Es una placa de desarrollo de código abierto con un microcontrolador programable. Permite crear proyectos electrónicos interactivos de forma sencilla.<br><br>
+<strong>📦 Partes principales:</strong><br>
+• <strong>Entradas Analógicas (A0-A5):</strong> Leen voltajes variables (0-5V → 0-1023)<br>
+• <strong>Pines Digitales (0-13):</strong> Envían/reciben 0V o 5V. Marcados con ~ = PWM<br>
+• <strong>Alimentación:</strong> USB o entrada externa 7-12V<br><br>
+<strong>🚀 Para empezar:</strong> Descarga el Arduino IDE, conecta por USB y carga el ejemplo "Blink".
+                `
+            },
+            {
+                keywords: ["buzzer", "alarma", "sonido", "beep", "zumbador", "hacer sonar"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Cable USB",
+                    "Buzzer activo 5V",
+                    "Cables puente macho-macho x2",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Generar sonidos o una alarma sonora con un buzzer.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• Pata (+) del buzzer → Pin digital 8<br>
+• Pata (−) del buzzer → GND<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+Con un buzzer activo basta enviar HIGH/LOW al pin para que suene. Si es pasivo, se usa la función <em>tone(pin, frecuencia)</em> para generar distintas notas o patrones de alarma.
+                `
+            },
+            {
+                keywords: ["temperatura", "dht11", "dht22", "humedad ambiente", "sensor clima", "termometro"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Sensor DHT11 (o DHT22)",
+                    "Resistor 10kΩ (pull-up, si el módulo no lo trae integrado)",
+                    "Cables puente macho-macho x3",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Medir temperatura y humedad ambiental.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• VCC → 5V | GND → GND<br>
+• Pin de datos (OUT) → Pin digital 2<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El sensor envía una trama digital con los valores de temperatura y humedad. Con la librería <em>DHT.h</em> se leen ambos datos cada 2 segundos aproximadamente (es su velocidad máxima de muestreo).
+                `
+            },
+            {
+                keywords: ["ldr", "fotoresistencia", "sensor de luz", "luz ambiente", "detectar oscuridad", "luz automatica"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Fotoresistencia LDR",
+                    "Resistor 10kΩ",
+                    "LED 5mm",
+                    "Resistor 220Ω",
+                    "Cables puente macho-macho x6",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Encender un LED automáticamente cuando hay poca luz (luz nocturna).<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• LDR: un extremo → 5V, otro extremo → A0 + Resistor 10kΩ → GND (divisor de voltaje)<br>
+• LED: Ánodo → Resistor 220Ω → Pin 13, Cátodo → GND<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+La LDR cambia su resistencia según la luz recibida: a menos luz, mayor resistencia y menor voltaje en A0. Cuando la lectura analógica baja de un umbral definido, el Arduino enciende el LED.
+                `
+            },
+            {
+                keywords: ["rele", "relay", "modulo rele", "controlar 220v", "encender bombillo", "electrodomesticos"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Módulo relé 5V de 1 canal",
+                    "Cables puente macho-hembra x3",
+                    "Bombillo o electrodoméstico de prueba",
+                    "Cable de corriente 110V/220V (manipulado con precaución)"
+                ],
+                explicacion: `
+<strong>⚠️ IMPORTANTE:</strong> Esta conexión maneja corriente de 110V/220V. Trabaja con el cable de red desconectado y solo energízalo al finalizar, con supervisión de alguien con experiencia.<br><br>
+<strong>🔌 Conexiones (lado Arduino):</strong><br>
+• VCC → 5V | GND → GND | IN → Pin digital 7<br><br>
+<strong>🔌 Conexiones (lado 220V, con el módulo apagado):</strong><br>
+• COM → Fase de entrada | NO → Fase hacia el electrodoméstico<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El pin digital activa una bobina interna que cierra un contacto mecánico, permitiendo que Arduino (5V) controle cargas de alto voltaje sin contacto eléctrico directo.
+                `
+            },
+            {
+                keywords: ["teclado matricial", "keypad", "clave", "contrasena", "4x4", "password arduino"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Teclado matricial 4x4",
+                    "Cables puente macho-macho x8",
+                    "Librería Keypad.h (Arduino IDE)"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Leer una clave o contraseña ingresada por teclado matricial.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• Las 8 filas/columnas del teclado → Pines digitales 2 al 9 (según definición en el código)<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El Arduino activa una fila a la vez y revisa qué columna se conecta al presionar una tecla, identificando así el carácter. Con la librería Keypad.h se simplifica todo este mapeo.
+                `
+            },
+            {
+                keywords: ["joystick", "control analogico", "palanca", "control xy", "modulo ky-023"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Módulo joystick KY-023",
+                    "Cables puente macho-macho x5"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Leer las posiciones X, Y y el botón de un joystick analógico.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• VCC → 5V | GND → GND<br>
+• VRx → A0 | VRy → A1 | SW (botón) → Pin digital 2<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+Internamente el joystick tiene dos potenciómetros (uno por eje) que entregan valores de 0 a 1023. El botón SW es un pulsador que se activa al presionar la palanca hacia abajo.
+                `
+            },
+            {
+                keywords: ["pir", "sensor movimiento", "detectar movimiento", "presencia", "hc-sr501", "alarma movimiento"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Sensor PIR HC-SR501",
+                    "LED 5mm",
+                    "Resistor 220Ω",
+                    "Buzzer (opcional, para alarma)",
+                    "Cables puente macho-macho x5"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Detectar movimiento y activar una alerta (LED o buzzer).<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• VCC → 5V | GND → GND | OUT → Pin digital 8<br>
+• LED → Pin 13 con Resistor 220Ω → GND<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El sensor PIR detecta cambios en la radiación infrarroja (calor corporal) dentro de su rango. Cuando detecta movimiento, envía HIGH por OUT y el Arduino puede encender el LED o disparar una alarma.
+                `
+            },
+            {
+                keywords: ["semaforo", "trafico", "luces secuenciales", "rojo amarillo verde"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "LED rojo, LED amarillo, LED verde",
+                    "3 Resistores de 220Ω",
+                    "Cables puente macho-macho x6",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Simular la secuencia de un semáforo vehicular.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• LED rojo → Resistor 220Ω → Pin 11 | LED amarillo → Resistor 220Ω → Pin 12 | LED verde → Resistor 220Ω → Pin 13<br>
+• Cátodos de los 3 LEDs → GND<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El código enciende y apaga los LEDs en secuencia con temporizadores (delay): rojo varios segundos, luego verde, luego amarillo antes de volver a rojo, imitando un semáforo real.
+                `
+            },
+            {
+                keywords: ["display 7 segmentos", "siete segmentos", "contador numerico", "mostrar numeros"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Display 7 segmentos (cátodo común)",
+                    "8 Resistores de 220Ω",
+                    "Cables puente macho-macho x9",
+                    "Protoboard"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Mostrar números del 0 al 9 en un display de 7 segmentos.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• Cada segmento (a-g y punto dp) → Resistor 220Ω → Pin digital (2 al 9, uno por segmento)<br>
+• Pin común (cátodo) → GND<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+Cada número se forma encendiendo una combinación específica de segmentos. Se suele guardar cada combinación en un arreglo (patrones binarios) para simplificar el código del contador.
+                `
+            },
+            {
+                keywords: ["bluetooth", "hc-05", "hc-06", "control celular", "app movil", "control remoto inalambrico"],
+                materiales: [
+                    "Arduino Uno R3",
+                    "Módulo Bluetooth HC-05 (o HC-06)",
+                    "Resistores 1kΩ y 2kΩ (divisor de voltaje para el pin RX)",
+                    "Cables puente macho-macho x4",
+                    "App de terminal Bluetooth en el celular"
+                ],
+                explicacion: `
+<strong>🎯 Objetivo:</strong> Controlar Arduino de forma inalámbrica desde el celular.<br><br>
+<strong>🔌 Conexiones:</strong><br>
+• VCC → 5V | GND → GND<br>
+• TXD del módulo → Pin RX (0) del Arduino<br>
+• RXD del módulo → Pin TX (1) del Arduino, pasando por el divisor de voltaje (1kΩ/2kΩ) porque el módulo trabaja a 3.3V<br><br>
+<strong>⚙️ Funcionamiento:</strong><br>
+El HC-05 crea un puente serial inalámbrico: lo que se escribe desde una app de celular llega al Arduino como si viniera del Monitor Serial, permitiendo controlar LEDs, motores o leer sensores a distancia.
+                `
+            }
+        ];
+
+        const defaultResponse = {
+            materiales: [
+                "Depende del proyecto específico que quieras realizar",
+                "Arduino Uno o placa de tu preferencia",
+                "Protoboard y cables puente",
+                "Componentes electrónicos según el circuito",
+                "Multímetro para mediciones (recomendado)"
+            ],
+            explicacion: `
+Gracias por tu consulta. Como no reconozco el circuito exacto, te doy orientación general:<br><br>
+• <strong>Explícame con más detalle:</strong> ¿Qué quieres construir, qué componentes tienes o qué función necesitas?<br>
+• <strong>Ejemplos de preguntas que puedes hacerme:</strong><br>
+  → "¿Cómo conectar un LED con Arduino?"<br>
+  → "Materiales para usar un sensor de distancia"<br>
+  → "Explicación de un circuito con pulsador"<br><br>
+✍️ Cuéntame más y te daré los materiales exactos + conexiones paso a paso.
+            `
+        };
+
+        const chatContainer = document.getElementById('chatContainer');
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const btnClear = document.getElementById('btnClear');
+
+        function getResponse(query) {
+            const lowerQuery = query.toLowerCase();
+            for (const item of knowledgeBase) {
+                const match = item.keywords.some(keyword => lowerQuery.includes(keyword.toLowerCase()));
+                if (match) return item;
+            }
+            return {...defaultResponse};
+        }
+
+        function addMessage(sender, text, materiales = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex gap-3 animate-fade-in';
+            
+            if (sender === 'user') {
+                messageDiv.classList.add('justify-end');
+                messageDiv.innerHTML = `
+                    <div class="chat-bubble-user max-w-[85%]">
+                        <p>${text}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-slate-600">
+                        <i class="fa fa-user"></i>
+                    </div>
+                `;
+            } else {
+                let materialesHTML = '';
+                if (materiales && materiales.length > 0) {
+                    materialesHTML = `
+                        <div class="materials-box">
+                            <p class="font-bold text-yellow-200 mb-2">📦 Materiales Necesarios:</p>
+                            <ul class="list-disc list-inside space-y-1 text-sm">
+                                ${materiales.map(m => `<li>${m}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+                messageDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white">
+                        <i class="fa fa-microchip"></i>
+                    </div>
+                    <div class="chat-bubble-ai max-w-[85%]">
+                        ${materialesHTML}
+                        <div class="mt-2">${text}</div>
+                    </div>
+                `;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showTyping() {
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typingIndicator';
+            typingDiv.className = 'flex gap-3 animate-pulse';
+            typingDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white">
+                    <i class="fa fa-microchip"></i>
+                </div>
+                <div class="chat-bubble-ai max-w-[85%] py-3 px-4">
+                    <p>Circuit IA está pensando...</p>
+                </div>
+            `;
+            chatContainer.appendChild(typingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const query = userInput.value.trim();
+            if (!query) return;
+            
+            addMessage('user', query);
+            userInput.value = '';
+            
+            showTyping();
+            
+            setTimeout(() => {
+                hideTyping();
+                const respuesta = getResponse(query);
+                addMessage('ai', respuesta.explicacion, respuesta.materiales);
+            }, 800 + Math.random() * 600);
+        });
+
+        btnClear.addEventListener('click', () => {
+            if (confirm('¿Seguro que quieres borrar toda la conversación?')) {
+                chatContainer.innerHTML = '';
+                location.reload();
+            }
+        });
+
+        window.addEventListener('load', () => {
+            userInput.focus();
+        });
+
+        // === Registro del Service Worker (funcionamiento offline) ===
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registrado:', reg.scope))
+                    .catch(err => console.log('Error registrando Service Worker:', err));
+            });
+        }
+
+        // === Prompt de instalación (botón "Instalar app") ===
+        const btnInstall = document.getElementById('btnInstall');
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            btnInstall.classList.remove('hidden');
+            btnInstall.classList.add('flex');
+        });
+
+        btnInstall.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                btnInstall.classList.add('hidden');
+                btnInstall.classList.remove('flex');
+            }
+            deferredPrompt = null;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            btnInstall.classList.add('hidden');
+            btnInstall.classList.remove('flex');
+        });
+    </script>
+</body>
+</html>
