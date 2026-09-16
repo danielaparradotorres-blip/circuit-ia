@@ -76,7 +76,10 @@
                         <p class="text-xs text-blue-100">Asistente Inteligente de Electrónica</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <button id="btnCamara" class="flex items-center bg-white/15 hover:bg-white/25 transition-colors text-sm px-3 py-1.5 rounded-lg border border-white/30">
+                        <i class="fa fa-camera mr-1"></i> Escáner
+                    </button>
                     <button id="btnInstall" class="hidden items-center bg-white/15 hover:bg-white/25 transition-colors text-sm px-3 py-1.5 rounded-lg border border-white/30">
                         <i class="fa fa-download mr-1"></i> Instalar app
                     </button>
@@ -118,380 +121,719 @@
             </form>
             <p class="text-xs text-slate-400 mt-2 text-center">Circuit IA — Respuestas precisas para estudiantes de electrónica</p>
         </footer>
+
+    <!-- ============ MODAL: Herramientas de Cámara ============ -->
+    <div id="cameraModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+            <div class="bg-gradient-to-r from-primary to-secondary text-white p-4 flex items-center justify-between flex-shrink-0">
+                <h3 class="font-bold"><i class="fa fa-camera mr-2"></i>Herramientas con Cámara</h3>
+                <button id="btnCerrarCamara" class="text-white/80 hover:text-white">
+                    <i class="fa fa-times text-lg"></i>
+                </button>
+            </div>
+
+            <div class="flex border-b border-slate-200 flex-shrink-0">
+                <button id="tabResistencia" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-primary text-primary transition-colors">
+                    🎨 Leer Resistencia
+                </button>
+                <button id="tabBitacora" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-500 transition-colors">
+                    📓 Mi Bitácora
+                </button>
+            </div>
+
+            <div class="overflow-y-auto p-4">
+                <!-- Panel: Escáner de resistencias -->
+                <div id="panelResistencia">
+                    <p class="text-xs text-slate-500 mb-3">
+                        Activa la cámara, congela la imagen y toca cada franja de color de la resistencia (de izquierda a derecha, empezando por la más cercana al borde).
+                    </p>
+
+                    <div class="flex items-center gap-2 mb-3 text-sm">
+                        <label class="text-slate-600 font-medium">Bandas:</label>
+                        <select id="selectorBandas" class="border border-slate-300 rounded-lg px-2 py-1 text-sm">
+                            <option value="4" selected>4 bandas</option>
+                            <option value="5">5 bandas</option>
+                        </select>
+                    </div>
+
+                    <div class="relative bg-black rounded-xl overflow-hidden" style="aspect-ratio: 4/3;">
+                        <video id="videoCamara" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                        <canvas id="canvasCamara" class="w-full h-full hidden absolute top-0 left-0 cursor-crosshair"></canvas>
+                    </div>
+
+                    <div class="flex gap-2 mt-3">
+                        <button id="btnIniciarCamara" class="flex-1 bg-primary hover:bg-secondary text-white rounded-lg py-2 text-sm transition-colors">
+                            <i class="fa fa-video-camera mr-1"></i> Activar Cámara
+                        </button>
+                        <button id="btnCongelar" class="hidden flex-1 bg-secondary hover:bg-primary text-white rounded-lg py-2 text-sm transition-colors">
+                            <i class="fa fa-camera mr-1"></i> Congelar
+                        </button>
+                        <button id="btnReiniciarLectura" class="hidden flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg py-2 text-sm transition-colors">
+                            <i class="fa fa-refresh mr-1"></i> Reiniciar
+                        </button>
+                    </div>
+
+                    <div id="bandasDetectadas" class="flex gap-2 mt-3 flex-wrap"></div>
+                    <div id="resultadoResistencia" class="hidden mt-3 text-center font-bold text-2xl text-primary bg-primary/5 rounded-lg py-3"></div>
+                </div>
+
+                <!-- Panel: Bitácora de proyectos -->
+                <div id="panelBitacora" class="hidden">
+                    <p class="text-xs text-slate-500 mb-3">
+                        Guarda fotos de tus montajes con una nota, como un cuaderno digital de tu proyecto de grado.
+                    </p>
+
+                    <div class="relative bg-black rounded-xl overflow-hidden" style="aspect-ratio: 4/3;">
+                        <video id="videoBitacora" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                        <canvas id="canvasBitacora" class="w-full h-full hidden absolute top-0 left-0"></canvas>
+                    </div>
+
+                    <div class="flex gap-2 mt-3">
+                        <button id="btnIniciarCamaraBitacora" class="flex-1 bg-primary hover:bg-secondary text-white rounded-lg py-2 text-sm transition-colors">
+                            <i class="fa fa-video-camera mr-1"></i> Activar Cámara
+                        </button>
+                        <button id="btnCapturarFoto" class="hidden flex-1 bg-secondary hover:bg-primary text-white rounded-lg py-2 text-sm transition-colors">
+                            <i class="fa fa-camera mr-1"></i> Capturar Foto
+                        </button>
+                    </div>
+
+                    <div id="formCapturaBitacora" class="hidden mt-3 space-y-2">
+                        <textarea id="notaBitacora" placeholder="Escribe una nota sobre esta foto (ej: 'Primer prototipo del sensor de luz')" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" rows="2"></textarea>
+                        <button id="btnGuardarBitacora" class="w-full bg-primary hover:bg-secondary text-white rounded-lg py-2 text-sm transition-colors">
+                            <i class="fa fa-save mr-1"></i> Guardar en Bitácora
+                        </button>
+                    </div>
+
+                    <div id="listaBitacora" class="mt-4 space-y-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ============ FIN MODAL ============ -->
+
     </div>
 
     <script>
         const knowledgeBase = [
             {
-                keywords: ["led", "encender led", "parpadear led", "led arduino", "prender luz"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Cable USB tipo B",
-                    "LED de 5mm (cualquier color)",
-                    "Resistor de 220Ω (rojo-rojo-marrón)",
-                    "Cables puente macho-macho x2",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Encender y hacer parpadear un LED con Arduino.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• Ánodo del LED (pata larga) → Resistor 220Ω → Pin digital 13<br>
-• Cátodo del LED (pata corta) → GND (tierra)<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El Arduino envía 5V por el pin 13. El resistor limita la corriente para no quemar el LED. Al alternar entre HIGH y LOW, el LED parpadea.
-                `
+                        "keywords": [
+                                    "led",
+                                    "encender led",
+                                    "parpadear led",
+                                    "led arduino",
+                                    "prender luz",
+                                    "blink"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Cable USB tipo B",
+                                    "LED de 5mm (cualquier color)",
+                                    "Resistor de 220Ω (rojo-rojo-marrón)",
+                                    "Cables puente macho-macho x2",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Encender y hacer parpadear un LED con Arduino.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Ánodo del LED (pata larga) → Resistor 220Ω → Pin digital 13<br>\n• Cátodo del LED (pata corta) → GND (tierra)<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl Arduino envía 5V por el pin 13. El resistor limita la corriente para no quemar el LED. Al alternar entre HIGH y LOW, el LED parpadea.",
+                        "codigo": "// Circuit IA — LED intermitente\n// LED (con resistor 220Ω) conectado al pin 13\n\nconst int PIN_LED = 13;\n\nvoid setup() {\n  pinMode(PIN_LED, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(PIN_LED, HIGH);  // Enciende el LED\n  delay(1000);                  // Espera 1 segundo\n  digitalWrite(PIN_LED, LOW);   // Apaga el LED\n  delay(1000);                  // Espera 1 segundo\n}"
             },
             {
-                keywords: ["pulsador", "boton", "presionar", "detectar pulsacion"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Cable USB",
-                    "Pulsador / Botón 4 pines",
-                    "Resistor 10kΩ",
-                    "Resistor 220Ω",
-                    "LED 5mm",
-                    "Cables puente macho-macho x6",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Encender un LED al presionar un botón.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• Botón: un extremo → 5V, el otro → Pin 2 + Resistor 10kΩ → GND<br>
-• LED: Ánodo → Resistor 220Ω → Pin 13, Cátodo → GND<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-Sin presionar el botón, el pin 2 lee LOW (0V). Al presionar, recibe 5V y detecta HIGH, encendiendo el LED. El resistor de 10kΩ actúa como PULL-DOWN.
-                `
+                        "keywords": [
+                                    "pulsador",
+                                    "boton",
+                                    "presionar",
+                                    "detectar pulsacion"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Cable USB",
+                                    "Pulsador / Botón 4 pines",
+                                    "Resistor 10kΩ",
+                                    "Resistor 220Ω",
+                                    "LED 5mm",
+                                    "Cables puente macho-macho x6",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Encender un LED al presionar un botón.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Botón: un extremo → 5V, el otro → Pin 2 + Resistor 10kΩ → GND<br>\n• LED: Ánodo → Resistor 220Ω → Pin 13, Cátodo → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nSin presionar el botón, el pin 2 lee LOW (0V). Al presionar, recibe 5V y detecta HIGH, encendiendo el LED. El resistor de 10kΩ actúa como PULL-DOWN.",
+                        "codigo": "// Circuit IA — LED controlado por pulsador\n// Botón en pin 2 (con resistor pull-down 10kΩ), LED en pin 13\n\nconst int PIN_BOTON = 2;\nconst int PIN_LED = 13;\n\nvoid setup() {\n  pinMode(PIN_BOTON, INPUT);\n  pinMode(PIN_LED, OUTPUT);\n}\n\nvoid loop() {\n  int estadoBoton = digitalRead(PIN_BOTON);\n\n  if (estadoBoton == HIGH) {\n    digitalWrite(PIN_LED, HIGH);  // Botón presionado: LED encendido\n  } else {\n    digitalWrite(PIN_LED, LOW);   // Botón libre: LED apagado\n  }\n}"
             },
             {
-                keywords: ["potenciometro", "brillo", "regular luz", "variar voltaje", "analogico"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Cable USB",
-                    "Potenciómetro 10kΩ",
-                    "LED 5mm",
-                    "Resistor 220Ω",
-                    "Cables puente macho-macho x5",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Controlar el brillo de un LED girando el potenciómetro.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• Potenciómetro: Pin 1 → 5V, Pin 2 → A0 (entrada analógica), Pin 3 → GND<br>
-• LED: Ánodo → Resistor 220Ω → Pin 9 (PWM), Cátodo → GND<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El potenciómetro entrega un voltaje variable (0-5V). Arduino lee ese valor (0-1023) por el pin A0 y lo convierte a PWM (0-255) para ajustar el brillo del LED.
-                `
+                        "keywords": [
+                                    "potenciometro",
+                                    "brillo",
+                                    "regular luz",
+                                    "variar voltaje",
+                                    "analogico"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Cable USB",
+                                    "Potenciómetro 10kΩ",
+                                    "LED 5mm",
+                                    "Resistor 220Ω",
+                                    "Cables puente macho-macho x5",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Controlar el brillo de un LED girando el potenciómetro.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Potenciómetro: Pin 1 → 5V, Pin 2 → A0 (entrada analógica), Pin 3 → GND<br>\n• LED: Ánodo → Resistor 220Ω → Pin 9 (PWM), Cátodo → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl potenciómetro entrega un voltaje variable (0-5V). Arduino lee ese valor (0-1023) por el pin A0 y lo convierte a PWM (0-255) para ajustar el brillo del LED.",
+                        "codigo": "// Circuit IA — Control de brillo con potenciómetro\n// Potenciómetro en A0, LED (PWM) en pin 9\n\nconst int PIN_POT = A0;\nconst int PIN_LED = 9;\n\nvoid setup() {\n  pinMode(PIN_LED, OUTPUT);\n  // El pin analógico no requiere pinMode\n}\n\nvoid loop() {\n  int lecturaPot = analogRead(PIN_POT);           // 0 a 1023\n  int brillo = map(lecturaPot, 0, 1023, 0, 255);  // Escala a 0-255 (PWM)\n  analogWrite(PIN_LED, brillo);\n}"
             },
             {
-                keywords: ["motor", "motor dc", "girar motor", "controlar motor", "transistor", "relé"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Cable USB",
-                    "Motor DC 5-9V",
-                    "Transistor TIP120",
-                    "Diodo 1N4007",
-                    "Resistor 1kΩ",
-                    "Fuente externa 6-9V",
-                    "Cables puente",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>⚠️ IMPORTANTE:</strong> Nunca conectes un motor directamente al Arduino, puede quemarlo. Usa un transistor como interruptor.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• Base del TIP120 → Resistor 1kΩ → Pin 9<br>
-• Colector → GND Arduino<br>
-• Emisor → GND Fuente externa<br>
-• Motor → Pin 9 (colector) y + Fuente externa<br>
-• Diodo en paralelo con el motor (cátodo al +)<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El Arduino controla el transistor que alimenta al motor con energía externa. El diodo protege contra picos de voltaje generados por el motor.
-                `
+                        "keywords": [
+                                    "motor",
+                                    "motor dc",
+                                    "girar motor",
+                                    "controlar motor",
+                                    "transistor motor",
+                                    "rele motor"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Cable USB",
+                                    "Motor DC 5-9V",
+                                    "Transistor TIP120",
+                                    "Diodo 1N4007",
+                                    "Resistor 1kΩ",
+                                    "Fuente externa 6-9V",
+                                    "Cables puente",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>⚠️ IMPORTANTE:</strong> Nunca conectes un motor directamente al Arduino, puede quemarlo. Usa un transistor como interruptor.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Base del TIP120 → Resistor 1kΩ → Pin 9<br>\n• Colector → GND Arduino<br>\n• Emisor → GND Fuente externa<br>\n• Motor → Pin 9 (colector) y + Fuente externa<br>\n• Diodo en paralelo con el motor (cátodo al +)<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl Arduino controla el transistor que alimenta al motor con energía externa. El diodo protege contra picos de voltaje generados por el motor.",
+                        "codigo": "// Circuit IA — Control de motor DC con transistor TIP120\n// Base del transistor (vía resistor 1kΩ) en pin 9\n\nconst int PIN_MOTOR = 9;\n\nvoid setup() {\n  pinMode(PIN_MOTOR, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(PIN_MOTOR, HIGH);  // Motor encendido a máxima velocidad\n  delay(3000);\n  digitalWrite(PIN_MOTOR, LOW);   // Motor apagado\n  delay(3000);\n\n  // Tip: usa analogWrite(PIN_MOTOR, valor de 0 a 255)\n  // en vez de digitalWrite si quieres controlar la velocidad.\n}"
             },
             {
-                keywords: ["sensor distancia", "ultrasonico", "hc-sr04", "medir distancia", "obstaculos"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Sensor ultrasónico HC-SR04",
-                    "LED 5mm",
-                    "Resistor 220Ω",
-                    "Cables puente macho-macho x8",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Medir la distancia a objetos y encender un LED si están cerca.<br><br>
-<strong>🔌 Conexiones HC-SR04:</strong><br>
-• VCC → 5V | GND → GND | Trig → Pin 9 | Echo → Pin 10<br>
-• LED → Pin 13 con resistor 220Ω → GND<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El sensor emite un pulso ultrasónico y mide el tiempo en regresar. Con la velocidad del sonido calcula la distancia. Si es menor a 20cm, se enciende el LED.
-                `
+                        "keywords": [
+                                    "sensor distancia",
+                                    "ultrasonico",
+                                    "hc-sr04",
+                                    "medir distancia",
+                                    "obstaculos"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Sensor ultrasónico HC-SR04",
+                                    "LED 5mm",
+                                    "Resistor 220Ω",
+                                    "Cables puente macho-macho x8",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Medir la distancia a objetos y encender un LED si están cerca.<br><br>\n<strong>🔌 Conexiones HC-SR04:</strong><br>\n• VCC → 5V | GND → GND | Trig → Pin 9 | Echo → Pin 10<br>\n• LED → Pin 13 con resistor 220Ω → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl sensor emite un pulso ultrasónico y mide el tiempo en regresar. Con la velocidad del sonido calcula la distancia. Si es menor a 20cm, se enciende el LED.",
+                        "codigo": "// Circuit IA — Medidor de distancia con HC-SR04\n// Trig -> pin 9, Echo -> pin 10, LED -> pin 13\n\nconst int PIN_TRIG = 9;\nconst int PIN_ECHO = 10;\nconst int PIN_LED = 13;\n\nvoid setup() {\n  pinMode(PIN_TRIG, OUTPUT);\n  pinMode(PIN_ECHO, INPUT);\n  pinMode(PIN_LED, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  // Enviar pulso ultrasónico de 10 microsegundos\n  digitalWrite(PIN_TRIG, LOW);\n  delayMicroseconds(2);\n  digitalWrite(PIN_TRIG, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(PIN_TRIG, LOW);\n\n  // Medir tiempo del eco (en microsegundos)\n  long duracion = pulseIn(PIN_ECHO, HIGH);\n\n  // Convertir tiempo a distancia (cm) — velocidad del sonido = 0.034 cm/µs\n  float distancia = duracion * 0.034 / 2;\n\n  Serial.print(\"Distancia: \");\n  Serial.print(distancia);\n  Serial.println(\" cm\");\n\n  if (distancia < 20) {\n    digitalWrite(PIN_LED, HIGH);  // Objeto cerca: enciende LED\n  } else {\n    digitalWrite(PIN_LED, LOW);\n  }\n\n  delay(200);\n}"
             },
             {
-                keywords: ["display lcd", "pantalla", "mostrar texto", "lcd 16x2", "i2c"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Pantalla LCD 16x2 (con módulo I2C)",
-                    "Cables puente macho-macho x4",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Mostrar texto y datos en una pantalla LCD.<br><br>
-<strong>🔌 Conexiones (I2C):</strong><br>
-• VCC → 5V | GND → GND<br>
-• SDA → A4 | SCL → A5<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El módulo I2C simplifica las conexiones usando solo 2 cables de datos. Puedes mostrar mensajes, valores de sensores, contadores y más en 2 líneas de 16 caracteres.
-                `
+                        "keywords": [
+                                    "display lcd",
+                                    "pantalla",
+                                    "mostrar texto",
+                                    "lcd 16x2",
+                                    "lcd i2c"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Pantalla LCD 16x2 (con módulo I2C)",
+                                    "Cables puente macho-macho x4",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Mostrar texto y datos en una pantalla LCD.<br><br>\n<strong>🔌 Conexiones (I2C):</strong><br>\n• VCC → 5V | GND → GND<br>\n• SDA → A4 | SCL → A5<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl módulo I2C simplifica las conexiones usando solo 2 cables de datos. Puedes mostrar mensajes, valores de sensores, contadores y más en 2 líneas de 16 caracteres.",
+                        "codigo": "// Circuit IA — Pantalla LCD 16x2 por I2C\n// SDA -> A4, SCL -> A5\n// Requiere instalar la librería \"LiquidCrystal I2C\" desde el Gestor de Librerías\n\n#include <Wire.h>\n#include <LiquidCrystal_I2C.h>\n\n// Dirección I2C común: 0x27 (si no funciona, prueba 0x3F)\nLiquidCrystal_I2C lcd(0x27, 16, 2);\n\nvoid setup() {\n  lcd.init();\n  lcd.backlight();\n  lcd.setCursor(0, 0);\n  lcd.print(\"Circuit IA\");\n  lcd.setCursor(0, 1);\n  lcd.print(\"Hola Estudiante!\");\n}\n\nvoid loop() {\n  // El texto queda fijo. Para actualizarlo dinámicamente usa\n  // lcd.clear(); lcd.print(variable); dentro del loop().\n}"
             },
             {
-                keywords: ["servo", "motor servo", "girar angulo", "posicion", "90 grados", "180 grados"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Motor Servo (9g SG90 o similar)",
-                    "Cables puente macho-macho x3",
-                    "Fuente externa (recomendado para varios servos)"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Controlar la posición exacta de un servo (0° a 180°).<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• Cable ROJO → 5V<br>
-• Cable MARRÓN/NEGRO → GND<br>
-• Cable NARANJA/AMARILLO → Pin 9<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El servo recibe una señal PWM donde el ancho del pulso define el ángulo: 500µs = 0°, 1500µs = 90°, 2500µs = 180°. Solo necesita 1 cable de datos.
-                `
+                        "keywords": [
+                                    "servo",
+                                    "motor servo",
+                                    "girar angulo",
+                                    "posicion servo",
+                                    "90 grados",
+                                    "180 grados"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Motor Servo (9g SG90 o similar)",
+                                    "Cables puente macho-macho x3",
+                                    "Fuente externa (recomendado para varios servos)"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Controlar la posición exacta de un servo (0° a 180°).<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Cable ROJO → 5V<br>\n• Cable MARRÓN/NEGRO → GND<br>\n• Cable NARANJA/AMARILLO → Pin 9<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl servo recibe una señal PWM donde el ancho del pulso define el ángulo: 500µs = 0°, 1500µs = 90°, 2500µs = 180°. Solo necesita 1 cable de datos.",
+                        "codigo": "// Circuit IA — Control de posición de servomotor\n// Cable de señal (naranja/amarillo) -> pin 9\n\n#include <Servo.h>\n\nServo miServo;\nconst int PIN_SERVO = 9;\n\nvoid setup() {\n  miServo.attach(PIN_SERVO);\n}\n\nvoid loop() {\n  miServo.write(0);    // Mueve a 0 grados\n  delay(1000);\n  miServo.write(90);   // Mueve a 90 grados\n  delay(1000);\n  miServo.write(180);  // Mueve a 180 grados\n  delay(1000);\n}"
             },
             {
-                keywords: ["resistencias", "resistores", "codigo colores", "valor", "calcular resistencia"],
-                materiales: [
-                    "Resistores varios",
-                    "Tabla de código de colores",
-                    "Multímetro (opcional)"
-                ],
-                explicacion: `
-<strong>📋 Código de Colores de Resistencias:</strong><br>
-• Negro = 0 | Marrón = 1 | Rojo = 2 | Naranja = 3 | Amarillo = 4<br>
-• Verde = 5 | Azul = 6 | Violeta = 7 | Gris = 8 | Blanco = 9<br>
-• Dorado ±5% | Plateado ±10%<br><br>
-<strong>🔢 Fórmula:</strong> 2 primeros dígitos + multiplicador (10ⁿ) + tolerancia.<br>
-Ejemplo: Rojo-Rojo-Marrón = 22 × 10Ω = <strong>220Ω</strong>
-                `
+                        "keywords": [
+                                    "resistencias",
+                                    "resistores",
+                                    "codigo colores",
+                                    "valor resistencia",
+                                    "calcular resistencia"
+                        ],
+                        "materiales": [
+                                    "Resistores varios",
+                                    "Tabla de código de colores",
+                                    "Multímetro (opcional)"
+                        ],
+                        "explicacion": "<strong>📋 Código de Colores de Resistencias:</strong><br>\n• Negro = 0 | Marrón = 1 | Rojo = 2 | Naranja = 3 | Amarillo = 4<br>\n• Verde = 5 | Azul = 6 | Violeta = 7 | Gris = 8 | Blanco = 9<br>\n• Dorado ±5% | Plateado ±10%<br><br>\n<strong>🔢 Fórmula:</strong> 2 primeros dígitos + multiplicador (10ⁿ) + tolerancia.<br>\nEjemplo: Rojo-Rojo-Marrón = 22 × 10Ω = <strong>220Ω</strong><br><br>\n<strong>📷 Tip:</strong> Usa el botón \"Escáner\" en la parte superior de la app para leer el código de colores automáticamente con la cámara del celular o computador.",
+                        "codigo": null
             },
             {
-                keywords: ["protoboard", "tablero", "conexiones", "como funciona", "filas columnas"],
-                materiales: [
-                    "Protoboard",
-                    "Cables puente",
-                    "Componentes electrónicos"
-                ],
-                explicacion: `
-<strong>📌 ¿Cómo funciona una Protoboard?</strong><br>
-• <strong>Columnas centrales:</strong> Las 5 posiciones verticales de cada columna están CONECTADAS entre sí.<br>
-• <strong>Barra superior/inferior:</strong> Líneas horizontales de alimentación (+ y -), conectadas de extremo a extremo.<br>
-• <strong>El centro:</strong> Hay una línea divisoria que separa las dos mitades, NO están conectadas.<br><br>
-💡 Usa las barras para energía (+5V y GND) y las columnas para conectar componentes entre sí.
-                `
+                        "keywords": [
+                                    "protoboard",
+                                    "tablero",
+                                    "conexiones protoboard",
+                                    "como funciona protoboard",
+                                    "filas columnas"
+                        ],
+                        "materiales": [
+                                    "Protoboard",
+                                    "Cables puente",
+                                    "Componentes electrónicos"
+                        ],
+                        "explicacion": "<strong>📌 ¿Cómo funciona una Protoboard?</strong><br>\n• <strong>Columnas centrales:</strong> Las 5 posiciones verticales de cada columna están CONECTADAS entre sí.<br>\n• <strong>Barra superior/inferior:</strong> Líneas horizontales de alimentación (+ y -), conectadas de extremo a extremo.<br>\n• <strong>El centro:</strong> Hay una línea divisoria que separa las dos mitades, NO están conectadas.<br><br>\n💡 Usa las barras para energía (+5V y GND) y las columnas para conectar componentes entre sí.",
+                        "codigo": null
             },
             {
-                keywords: ["arduino", "que es arduino", "introduccion", "placa", "empezar"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Cable USB A-B",
-                    "Ordenador con Arduino IDE",
-                    "Protoboard y componentes básicos para practicar"
-                ],
-                explicacion: `
-<strong>🤖 ¿Qué es Arduino?</strong><br>
-Es una placa de desarrollo de código abierto con un microcontrolador programable. Permite crear proyectos electrónicos interactivos de forma sencilla.<br><br>
-<strong>📦 Partes principales:</strong><br>
-• <strong>Entradas Analógicas (A0-A5):</strong> Leen voltajes variables (0-5V → 0-1023)<br>
-• <strong>Pines Digitales (0-13):</strong> Envían/reciben 0V o 5V. Marcados con ~ = PWM<br>
-• <strong>Alimentación:</strong> USB o entrada externa 7-12V<br><br>
-<strong>🚀 Para empezar:</strong> Descarga el Arduino IDE, conecta por USB y carga el ejemplo "Blink".
-                `
+                        "keywords": [
+                                    "arduino",
+                                    "que es arduino",
+                                    "introduccion arduino",
+                                    "placa arduino",
+                                    "empezar con arduino"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Cable USB A-B",
+                                    "Ordenador con Arduino IDE",
+                                    "Protoboard y componentes básicos para practicar"
+                        ],
+                        "explicacion": "<strong>🤖 ¿Qué es Arduino?</strong><br>\nEs una placa de desarrollo de código abierto con un microcontrolador programable. Permite crear proyectos electrónicos interactivos de forma sencilla.<br><br>\n<strong>📦 Partes principales:</strong><br>\n• <strong>Entradas Analógicas (A0-A5):</strong> Leen voltajes variables (0-5V → 0-1023)<br>\n• <strong>Pines Digitales (0-13):</strong> Envían/reciben 0V o 5V. Marcados con ~ = PWM<br>\n• <strong>Alimentación:</strong> USB o entrada externa 7-12V<br><br>\n<strong>🚀 Para empezar:</strong> Descarga el Arduino IDE, conecta por USB y carga el ejemplo \"Blink\".",
+                        "codigo": "// Circuit IA — Tu primer programa Arduino (\"Blink\")\n// LED integrado de la placa (pin 13) parpadeando\n\nvoid setup() {\n  // setup() se ejecuta UNA sola vez al encender/reiniciar\n  pinMode(13, OUTPUT);\n}\n\nvoid loop() {\n  // loop() se repite en bucle infinito\n  digitalWrite(13, HIGH);\n  delay(1000);\n  digitalWrite(13, LOW);\n  delay(1000);\n}"
             },
             {
-                keywords: ["buzzer", "alarma", "sonido", "beep", "zumbador", "hacer sonar"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Cable USB",
-                    "Buzzer activo 5V",
-                    "Cables puente macho-macho x2",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Generar sonidos o una alarma sonora con un buzzer.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• Pata (+) del buzzer → Pin digital 8<br>
-• Pata (−) del buzzer → GND<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-Con un buzzer activo basta enviar HIGH/LOW al pin para que suene. Si es pasivo, se usa la función <em>tone(pin, frecuencia)</em> para generar distintas notas o patrones de alarma.
-                `
+                        "keywords": [
+                                    "buzzer",
+                                    "alarma",
+                                    "sonido",
+                                    "beep",
+                                    "zumbador",
+                                    "hacer sonar"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Cable USB",
+                                    "Buzzer activo 5V",
+                                    "Cables puente macho-macho x2",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Generar sonidos o una alarma sonora con un buzzer.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Pata (+) del buzzer → Pin digital 8<br>\n• Pata (−) del buzzer → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nCon un buzzer activo basta enviar HIGH/LOW al pin para que suene. Si es pasivo, se usa la función <em>tone(pin, frecuencia)</em> para generar distintas notas o patrones de alarma.",
+                        "codigo": "// Circuit IA — Buzzer de alarma\n// Buzzer -> pin 8\n\nconst int PIN_BUZZER = 8;\n\nvoid setup() {\n  pinMode(PIN_BUZZER, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(PIN_BUZZER, HIGH);  // Buzzer activo: suena\n  delay(300);\n  digitalWrite(PIN_BUZZER, LOW);\n  delay(300);\n\n  // Si tu buzzer es PASIVO, reemplaza las líneas anteriores por:\n  // tone(PIN_BUZZER, 1000); delay(300); noTone(PIN_BUZZER); delay(300);\n}"
             },
             {
-                keywords: ["temperatura", "dht11", "dht22", "humedad ambiente", "sensor clima", "termometro"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Sensor DHT11 (o DHT22)",
-                    "Resistor 10kΩ (pull-up, si el módulo no lo trae integrado)",
-                    "Cables puente macho-macho x3",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Medir temperatura y humedad ambiental.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• VCC → 5V | GND → GND<br>
-• Pin de datos (OUT) → Pin digital 2<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El sensor envía una trama digital con los valores de temperatura y humedad. Con la librería <em>DHT.h</em> se leen ambos datos cada 2 segundos aproximadamente (es su velocidad máxima de muestreo).
-                `
+                        "keywords": [
+                                    "temperatura",
+                                    "dht11",
+                                    "dht22",
+                                    "humedad ambiente",
+                                    "sensor clima",
+                                    "termometro"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Sensor DHT11 (o DHT22)",
+                                    "Resistor 10kΩ (pull-up, si el módulo no lo trae integrado)",
+                                    "Cables puente macho-macho x3",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Medir temperatura y humedad ambiental.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• VCC → 5V | GND → GND<br>\n• Pin de datos (OUT) → Pin digital 2<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl sensor envía una trama digital con los valores de temperatura y humedad. Con la librería <em>DHT.h</em> se leen ambos datos cada 2 segundos aproximadamente (es su velocidad máxima de muestreo).",
+                        "codigo": "// Circuit IA — Sensor de temperatura y humedad DHT11\n// Pin de datos -> pin 2\n// Requiere instalar la librería \"DHT sensor library\" (Adafruit)\n\n#include <DHT.h>\n\n#define PIN_DHT 2\n#define TIPO_DHT DHT11\n\nDHT dht(PIN_DHT, TIPO_DHT);\n\nvoid setup() {\n  Serial.begin(9600);\n  dht.begin();\n}\n\nvoid loop() {\n  delay(2000);  // El DHT11 necesita ~2s entre lecturas\n\n  float humedad = dht.readHumidity();\n  float temperatura = dht.readTemperature();\n\n  if (isnan(humedad) || isnan(temperatura)) {\n    Serial.println(\"Error leyendo el sensor DHT11\");\n    return;\n  }\n\n  Serial.print(\"Humedad: \");\n  Serial.print(humedad);\n  Serial.print(\" %  Temperatura: \");\n  Serial.print(temperatura);\n  Serial.println(\" °C\");\n}"
             },
             {
-                keywords: ["ldr", "fotoresistencia", "sensor de luz", "luz ambiente", "detectar oscuridad", "luz automatica"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Fotoresistencia LDR",
-                    "Resistor 10kΩ",
-                    "LED 5mm",
-                    "Resistor 220Ω",
-                    "Cables puente macho-macho x6",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Encender un LED automáticamente cuando hay poca luz (luz nocturna).<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• LDR: un extremo → 5V, otro extremo → A0 + Resistor 10kΩ → GND (divisor de voltaje)<br>
-• LED: Ánodo → Resistor 220Ω → Pin 13, Cátodo → GND<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-La LDR cambia su resistencia según la luz recibida: a menos luz, mayor resistencia y menor voltaje en A0. Cuando la lectura analógica baja de un umbral definido, el Arduino enciende el LED.
-                `
+                        "keywords": [
+                                    "ldr",
+                                    "fotoresistencia",
+                                    "sensor de luz",
+                                    "luz ambiente",
+                                    "detectar oscuridad",
+                                    "luz automatica"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Fotoresistencia LDR",
+                                    "Resistor 10kΩ",
+                                    "LED 5mm",
+                                    "Resistor 220Ω",
+                                    "Cables puente macho-macho x6",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Encender un LED automáticamente cuando hay poca luz (luz nocturna).<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• LDR: un extremo → 5V, otro extremo → A0 + Resistor 10kΩ → GND (divisor de voltaje)<br>\n• LED: Ánodo → Resistor 220Ω → Pin 13, Cátodo → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nLa LDR cambia su resistencia según la luz recibida: a menos luz, mayor resistencia y menor voltaje en A0. Cuando la lectura analógica baja de un umbral definido, el Arduino enciende el LED.",
+                        "codigo": "// Circuit IA — Luz nocturna automática con LDR\n// LDR -> A0, LED -> pin 13\n\nconst int PIN_LDR = A0;\nconst int PIN_LED = 13;\nconst int UMBRAL = 400;  // Ajusta este valor según tu ambiente\n\nvoid setup() {\n  pinMode(PIN_LED, OUTPUT);\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int luz = analogRead(PIN_LDR);\n  Serial.println(luz);\n\n  if (luz < UMBRAL) {\n    digitalWrite(PIN_LED, HIGH);  // Poca luz: enciende LED\n  } else {\n    digitalWrite(PIN_LED, LOW);\n  }\n\n  delay(200);\n}"
             },
             {
-                keywords: ["rele", "relay", "modulo rele", "controlar 220v", "encender bombillo", "electrodomesticos"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Módulo relé 5V de 1 canal",
-                    "Cables puente macho-hembra x3",
-                    "Bombillo o electrodoméstico de prueba",
-                    "Cable de corriente 110V/220V (manipulado con precaución)"
-                ],
-                explicacion: `
-<strong>⚠️ IMPORTANTE:</strong> Esta conexión maneja corriente de 110V/220V. Trabaja con el cable de red desconectado y solo energízalo al finalizar, con supervisión de alguien con experiencia.<br><br>
-<strong>🔌 Conexiones (lado Arduino):</strong><br>
-• VCC → 5V | GND → GND | IN → Pin digital 7<br><br>
-<strong>🔌 Conexiones (lado 220V, con el módulo apagado):</strong><br>
-• COM → Fase de entrada | NO → Fase hacia el electrodoméstico<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El pin digital activa una bobina interna que cierra un contacto mecánico, permitiendo que Arduino (5V) controle cargas de alto voltaje sin contacto eléctrico directo.
-                `
+                        "keywords": [
+                                    "rele",
+                                    "relay",
+                                    "modulo rele",
+                                    "controlar 220v",
+                                    "encender bombillo",
+                                    "electrodomesticos"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Módulo relé 5V de 1 canal",
+                                    "Cables puente macho-hembra x3",
+                                    "Bombillo o electrodoméstico de prueba",
+                                    "Cable de corriente 110V/220V (manipulado con precaución)"
+                        ],
+                        "explicacion": "<strong>⚠️ IMPORTANTE:</strong> Esta conexión maneja corriente de 110V/220V. Trabaja con el cable de red desconectado y solo energízalo al finalizar, con supervisión de alguien con experiencia.<br><br>\n<strong>🔌 Conexiones (lado Arduino):</strong><br>\n• VCC → 5V | GND → GND | IN → Pin digital 7<br><br>\n<strong>🔌 Conexiones (lado 220V, con el módulo apagado):</strong><br>\n• COM → Fase de entrada | NO → Fase hacia el electrodoméstico<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl pin digital activa una bobina interna que cierra un contacto mecánico, permitiendo que Arduino (5V) controle cargas de alto voltaje sin contacto eléctrico directo.",
+                        "codigo": "// Circuit IA — Control de relé (carga de 110V/220V)\n// IN del módulo -> pin 7\n// ADVERTENCIA: la parte de 220V debe conectarse SIN ENERGÍA y por una persona con experiencia\n\nconst int PIN_RELE = 7;\n\nvoid setup() {\n  pinMode(PIN_RELE, OUTPUT);\n  digitalWrite(PIN_RELE, LOW);  // Inicia apagado (la mayoría de módulos son activos en HIGH)\n}\n\nvoid loop() {\n  digitalWrite(PIN_RELE, HIGH);  // Activa el relé (enciende la carga)\n  delay(5000);\n  digitalWrite(PIN_RELE, LOW);   // Desactiva el relé (apaga la carga)\n  delay(5000);\n}"
             },
             {
-                keywords: ["teclado matricial", "keypad", "clave", "contrasena", "4x4", "password arduino"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Teclado matricial 4x4",
-                    "Cables puente macho-macho x8",
-                    "Librería Keypad.h (Arduino IDE)"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Leer una clave o contraseña ingresada por teclado matricial.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• Las 8 filas/columnas del teclado → Pines digitales 2 al 9 (según definición en el código)<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El Arduino activa una fila a la vez y revisa qué columna se conecta al presionar una tecla, identificando así el carácter. Con la librería Keypad.h se simplifica todo este mapeo.
-                `
+                        "keywords": [
+                                    "teclado matricial",
+                                    "keypad",
+                                    "clave",
+                                    "contrasena",
+                                    "teclado 4x4",
+                                    "password arduino"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Teclado matricial 4x4",
+                                    "Cables puente macho-macho x8",
+                                    "Librería Keypad.h (Arduino IDE)"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Leer una clave o contraseña ingresada por teclado matricial.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Las 8 filas/columnas del teclado → Pines digitales 2 al 9 (según definición en el código)<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl Arduino activa una fila a la vez y revisa qué columna se conecta al presionar una tecla, identificando así el carácter. Con la librería Keypad.h se simplifica todo este mapeo.",
+                        "codigo": "// Circuit IA — Lectura de clave con teclado matricial 4x4\n// Filas -> pines 9,8,7,6 | Columnas -> pines 5,4,3,2\n// Requiere instalar la librería \"Keypad\" (por Mark Stanley y Alexander Brevig)\n\n#include <Keypad.h>\n\nconst byte FILAS = 4;\nconst byte COLUMNAS = 4;\n\nchar teclas[FILAS][COLUMNAS] = {\n  {'1','2','3','A'},\n  {'4','5','6','B'},\n  {'7','8','9','C'},\n  {'*','0','#','D'}\n};\n\nbyte pinesFilas[FILAS] = {9, 8, 7, 6};\nbyte pinesColumnas[COLUMNAS] = {5, 4, 3, 2};\n\nKeypad teclado = Keypad(makeKeymap(teclas), pinesFilas, pinesColumnas, FILAS, COLUMNAS);\n\nconst String CLAVE_CORRECTA = \"1234\";\nString claveIngresada = \"\";\n\nvoid setup() {\n  Serial.begin(9600);\n  Serial.println(\"Ingresa la clave y presiona #\");\n}\n\nvoid loop() {\n  char tecla = teclado.getKey();\n\n  if (tecla) {\n    if (tecla == '#') {\n      if (claveIngresada == CLAVE_CORRECTA) {\n        Serial.println(\"✅ Acceso concedido\");\n      } else {\n        Serial.println(\"❌ Clave incorrecta\");\n      }\n      claveIngresada = \"\";  // Reinicia para el siguiente intento\n    } else if (tecla == '*') {\n      claveIngresada = \"\";  // Botón para borrar\n    } else {\n      claveIngresada += tecla;\n    }\n  }\n}"
             },
             {
-                keywords: ["joystick", "control analogico", "palanca", "control xy", "modulo ky-023"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Módulo joystick KY-023",
-                    "Cables puente macho-macho x5"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Leer las posiciones X, Y y el botón de un joystick analógico.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• VCC → 5V | GND → GND<br>
-• VRx → A0 | VRy → A1 | SW (botón) → Pin digital 2<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-Internamente el joystick tiene dos potenciómetros (uno por eje) que entregan valores de 0 a 1023. El botón SW es un pulsador que se activa al presionar la palanca hacia abajo.
-                `
+                        "keywords": [
+                                    "joystick",
+                                    "control analogico",
+                                    "palanca",
+                                    "control xy",
+                                    "modulo ky-023"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Módulo joystick KY-023",
+                                    "Cables puente macho-macho x5"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Leer las posiciones X, Y y el botón de un joystick analógico.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• VCC → 5V | GND → GND<br>\n• VRx → A0 | VRy → A1 | SW (botón) → Pin digital 2<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nInternamente el joystick tiene dos potenciómetros (uno por eje) que entregan valores de 0 a 1023. El botón SW es un pulsador que se activa al presionar la palanca hacia abajo.",
+                        "codigo": "// Circuit IA — Lectura de joystick KY-023\n// VRx -> A0, VRy -> A1, SW -> pin 2\n\nconst int PIN_VRX = A0;\nconst int PIN_VRY = A1;\nconst int PIN_SW = 2;\n\nvoid setup() {\n  pinMode(PIN_SW, INPUT_PULLUP);  // El botón usa resistencia interna pull-up\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int x = analogRead(PIN_VRX);\n  int y = analogRead(PIN_VRY);\n  bool presionado = (digitalRead(PIN_SW) == LOW);  // Con INPUT_PULLUP, presionado = LOW\n\n  Serial.print(\"X: \"); Serial.print(x);\n  Serial.print(\"  Y: \"); Serial.print(y);\n  Serial.print(\"  Boton: \"); Serial.println(presionado ? \"SI\" : \"NO\");\n\n  delay(200);\n}"
             },
             {
-                keywords: ["pir", "sensor movimiento", "detectar movimiento", "presencia", "hc-sr501", "alarma movimiento"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Sensor PIR HC-SR501",
-                    "LED 5mm",
-                    "Resistor 220Ω",
-                    "Buzzer (opcional, para alarma)",
-                    "Cables puente macho-macho x5"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Detectar movimiento y activar una alerta (LED o buzzer).<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• VCC → 5V | GND → GND | OUT → Pin digital 8<br>
-• LED → Pin 13 con Resistor 220Ω → GND<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El sensor PIR detecta cambios en la radiación infrarroja (calor corporal) dentro de su rango. Cuando detecta movimiento, envía HIGH por OUT y el Arduino puede encender el LED o disparar una alarma.
-                `
+                        "keywords": [
+                                    "pir",
+                                    "sensor movimiento",
+                                    "detectar movimiento",
+                                    "presencia",
+                                    "hc-sr501",
+                                    "alarma movimiento"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Sensor PIR HC-SR501",
+                                    "LED 5mm",
+                                    "Resistor 220Ω",
+                                    "Buzzer (opcional, para alarma)",
+                                    "Cables puente macho-macho x5"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Detectar movimiento y activar una alerta (LED o buzzer).<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• VCC → 5V | GND → GND | OUT → Pin digital 8<br>\n• LED → Pin 13 con Resistor 220Ω → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl sensor PIR detecta cambios en la radiación infrarroja (calor corporal) dentro de su rango. Cuando detecta movimiento, envía HIGH por OUT y el Arduino puede encender el LED o disparar una alarma.",
+                        "codigo": "// Circuit IA — Detector de movimiento PIR\n// OUT del PIR -> pin 8, LED -> pin 13\n\nconst int PIN_PIR = 8;\nconst int PIN_LED = 13;\n\nvoid setup() {\n  pinMode(PIN_PIR, INPUT);\n  pinMode(PIN_LED, OUTPUT);\n  Serial.begin(9600);\n  Serial.println(\"Calibrando sensor PIR...\");\n  delay(2000);  // Tiempo de calibración inicial recomendado por el fabricante\n}\n\nvoid loop() {\n  int movimiento = digitalRead(PIN_PIR);\n\n  if (movimiento == HIGH) {\n    digitalWrite(PIN_LED, HIGH);\n    Serial.println(\"¡Movimiento detectado!\");\n  } else {\n    digitalWrite(PIN_LED, LOW);\n  }\n\n  delay(100);\n}"
             },
             {
-                keywords: ["semaforo", "trafico", "luces secuenciales", "rojo amarillo verde"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "LED rojo, LED amarillo, LED verde",
-                    "3 Resistores de 220Ω",
-                    "Cables puente macho-macho x6",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Simular la secuencia de un semáforo vehicular.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• LED rojo → Resistor 220Ω → Pin 11 | LED amarillo → Resistor 220Ω → Pin 12 | LED verde → Resistor 220Ω → Pin 13<br>
-• Cátodos de los 3 LEDs → GND<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El código enciende y apaga los LEDs en secuencia con temporizadores (delay): rojo varios segundos, luego verde, luego amarillo antes de volver a rojo, imitando un semáforo real.
-                `
+                        "keywords": [
+                                    "semaforo",
+                                    "trafico",
+                                    "luces secuenciales",
+                                    "rojo amarillo verde"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "LED rojo, LED amarillo, LED verde",
+                                    "3 Resistores de 220Ω",
+                                    "Cables puente macho-macho x6",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Simular la secuencia de un semáforo vehicular.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• LED rojo → Resistor 220Ω → Pin 11 | LED amarillo → Resistor 220Ω → Pin 12 | LED verde → Resistor 220Ω → Pin 13<br>\n• Cátodos de los 3 LEDs → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl código enciende y apaga los LEDs en secuencia con temporizadores (delay): rojo varios segundos, luego verde, luego amarillo antes de volver a rojo, imitando un semáforo real.",
+                        "codigo": "// Circuit IA — Semáforo con 3 LEDs\n// Rojo -> pin 11, Amarillo -> pin 12, Verde -> pin 13\n\nconst int PIN_ROJO = 11;\nconst int PIN_AMARILLO = 12;\nconst int PIN_VERDE = 13;\n\nvoid setup() {\n  pinMode(PIN_ROJO, OUTPUT);\n  pinMode(PIN_AMARILLO, OUTPUT);\n  pinMode(PIN_VERDE, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(PIN_ROJO, HIGH);\n  delay(4000);\n  digitalWrite(PIN_ROJO, LOW);\n\n  digitalWrite(PIN_VERDE, HIGH);\n  delay(4000);\n  digitalWrite(PIN_VERDE, LOW);\n\n  digitalWrite(PIN_AMARILLO, HIGH);\n  delay(1500);\n  digitalWrite(PIN_AMARILLO, LOW);\n}"
             },
             {
-                keywords: ["display 7 segmentos", "siete segmentos", "contador numerico", "mostrar numeros"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Display 7 segmentos (cátodo común)",
-                    "8 Resistores de 220Ω",
-                    "Cables puente macho-macho x9",
-                    "Protoboard"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Mostrar números del 0 al 9 en un display de 7 segmentos.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• Cada segmento (a-g y punto dp) → Resistor 220Ω → Pin digital (2 al 9, uno por segmento)<br>
-• Pin común (cátodo) → GND<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-Cada número se forma encendiendo una combinación específica de segmentos. Se suele guardar cada combinación en un arreglo (patrones binarios) para simplificar el código del contador.
-                `
+                        "keywords": [
+                                    "display 7 segmentos",
+                                    "siete segmentos",
+                                    "contador numerico",
+                                    "mostrar numeros"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Display 7 segmentos (cátodo común)",
+                                    "8 Resistores de 220Ω",
+                                    "Cables puente macho-macho x9",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Mostrar números del 0 al 9 en un display de 7 segmentos.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Cada segmento (a-g y punto dp) → Resistor 220Ω → Pin digital (2 al 9, uno por segmento)<br>\n• Pin común (cátodo) → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nCada número se forma encendiendo una combinación específica de segmentos. Se suele guardar cada combinación en un arreglo (patrones binarios) para simplificar el código del contador.",
+                        "codigo": "// Circuit IA — Contador en display 7 segmentos (cátodo común)\n// Segmentos a,b,c,d,e,f,g -> pines 2 a 8 (dp sin usar en este ejemplo)\n\nconst int SEGMENTOS[7] = {2, 3, 4, 5, 6, 7, 8};  // a, b, c, d, e, f, g\n\n// Cada fila indica qué segmentos encender (1) para formar el número 0-9\nconst byte NUMEROS[10][7] = {\n  {1,1,1,1,1,1,0}, // 0\n  {0,1,1,0,0,0,0}, // 1\n  {1,1,0,1,1,0,1}, // 2\n  {1,1,1,1,0,0,1}, // 3\n  {0,1,1,0,0,1,1}, // 4\n  {1,0,1,1,0,1,1}, // 5\n  {1,0,1,1,1,1,1}, // 6\n  {1,1,1,0,0,0,0}, // 7\n  {1,1,1,1,1,1,1}, // 8\n  {1,1,1,1,0,1,1}  // 9\n};\n\nvoid mostrarNumero(int numero) {\n  for (int i = 0; i < 7; i++) {\n    digitalWrite(SEGMENTOS[i], NUMEROS[numero][i]);\n  }\n}\n\nvoid setup() {\n  for (int i = 0; i < 7; i++) {\n    pinMode(SEGMENTOS[i], OUTPUT);\n  }\n}\n\nvoid loop() {\n  for (int n = 0; n <= 9; n++) {\n    mostrarNumero(n);\n    delay(1000);\n  }\n}"
             },
             {
-                keywords: ["bluetooth", "hc-05", "hc-06", "control celular", "app movil", "control remoto inalambrico"],
-                materiales: [
-                    "Arduino Uno R3",
-                    "Módulo Bluetooth HC-05 (o HC-06)",
-                    "Resistores 1kΩ y 2kΩ (divisor de voltaje para el pin RX)",
-                    "Cables puente macho-macho x4",
-                    "App de terminal Bluetooth en el celular"
-                ],
-                explicacion: `
-<strong>🎯 Objetivo:</strong> Controlar Arduino de forma inalámbrica desde el celular.<br><br>
-<strong>🔌 Conexiones:</strong><br>
-• VCC → 5V | GND → GND<br>
-• TXD del módulo → Pin RX (0) del Arduino<br>
-• RXD del módulo → Pin TX (1) del Arduino, pasando por el divisor de voltaje (1kΩ/2kΩ) porque el módulo trabaja a 3.3V<br><br>
-<strong>⚙️ Funcionamiento:</strong><br>
-El HC-05 crea un puente serial inalámbrico: lo que se escribe desde una app de celular llega al Arduino como si viniera del Monitor Serial, permitiendo controlar LEDs, motores o leer sensores a distancia.
-                `
+                        "keywords": [
+                                    "bluetooth",
+                                    "hc-05",
+                                    "hc-06",
+                                    "control celular",
+                                    "app movil",
+                                    "control remoto inalambrico"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Módulo Bluetooth HC-05 (o HC-06)",
+                                    "Resistores 1kΩ y 2kΩ (divisor de voltaje para el pin RX)",
+                                    "Cables puente macho-macho x4",
+                                    "App de terminal Bluetooth en el celular"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Controlar Arduino de forma inalámbrica desde el celular.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• VCC → 5V | GND → GND<br>\n• TXD del módulo → Pin RX (0) del Arduino<br>\n• RXD del módulo → Pin TX (1) del Arduino, pasando por el divisor de voltaje (1kΩ/2kΩ) porque el módulo trabaja a 3.3V<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl HC-05 crea un puente serial inalámbrico: lo que se escribe desde una app de celular llega al Arduino como si viniera del Monitor Serial, permitiendo controlar LEDs, motores o leer sensores a distancia.",
+                        "codigo": "// Circuit IA — Control de LED por Bluetooth (HC-05)\n// TXD del módulo -> RX(0) Arduino | RXD del módulo -> TX(1) Arduino (con divisor de voltaje)\n// Envía 'A' desde el celular para encender el LED 13, 'B' para apagarlo\n\nconst int PIN_LED = 13;\n\nvoid setup() {\n  pinMode(PIN_LED, OUTPUT);\n  Serial.begin(9600);  // Debe coincidir con la velocidad configurada en el HC-05\n}\n\nvoid loop() {\n  if (Serial.available() > 0) {\n    char comando = Serial.read();\n\n    if (comando == 'A') {\n      digitalWrite(PIN_LED, HIGH);\n    } else if (comando == 'B') {\n      digitalWrite(PIN_LED, LOW);\n    }\n  }\n}"
+            },
+            {
+                        "keywords": [
+                                    "ley de ohm",
+                                    "voltaje corriente resistencia",
+                                    "v=ir",
+                                    "formula ohm",
+                                    "calcular corriente"
+                        ],
+                        "materiales": [
+                                    "Multímetro (para comprobar en la práctica)",
+                                    "Resistores varios",
+                                    "Fuente de voltaje o pilas"
+                        ],
+                        "explicacion": "<strong>⚡ Ley de Ohm:</strong> La relación fundamental entre voltaje, corriente y resistencia.<br><br>\n<strong>🔢 Fórmula:</strong> <strong>V = I × R</strong><br>\n• V = Voltaje (Voltios)<br>\n• I = Corriente (Amperios)<br>\n• R = Resistencia (Ohmios Ω)<br><br>\n<strong>📐 Despejando:</strong><br>\n• Para hallar la corriente: <strong>I = V / R</strong><br>\n• Para hallar la resistencia: <strong>R = V / I</strong><br><br>\n<strong>💡 Ejemplo práctico (para un LED):</strong><br>\nSi Arduino da 5V, el LED consume ~2V y necesita máximo 20mA (0.02A):<br>\nR = (5V - 2V) / 0.02A = <strong>150Ω</strong> (por eso se usa 220Ω o 330Ω, para dejar margen de seguridad).",
+                        "codigo": null
+            },
+            {
+                        "keywords": [
+                                    "multimetro",
+                                    "medir voltaje",
+                                    "medir corriente",
+                                    "medir continuidad",
+                                    "usar multimetro"
+                        ],
+                        "materiales": [
+                                    "Multímetro digital",
+                                    "Circuito o componente a medir",
+                                    "Puntas de prueba (rojo y negro)"
+                        ],
+                        "explicacion": "<strong>🔧 Uso básico del Multímetro:</strong><br><br>\n<strong>1️⃣ Medir Voltaje (V):</strong> Selecciona V= (DC) o V~ (AC). Coloca las puntas EN PARALELO con el componente (una en cada terminal), sin desconectar el circuito.<br><br>\n<strong>2️⃣ Medir Corriente (A):</strong> Selecciona A. Debes conectar el multímetro EN SERIE (interrumpiendo el circuito para que la corriente pase por el medidor).<br><br>\n<strong>3️⃣ Medir Resistencia (Ω):</strong> Selecciona Ω. El componente debe estar DESCONECTADO del circuito (sin energía) para no dañar el multímetro.<br><br>\n<strong>4️⃣ Probar Continuidad:</strong> Modo de \"pitido\" 🔊, útil para verificar cables o fusibles. Sin energía en el circuito.<br><br>\n⚠️ <strong>Regla de oro:</strong> Voltaje en paralelo, corriente en serie, resistencia sin energía.",
+                        "codigo": null
+            },
+            {
+                        "keywords": [
+                                    "tipos de capacitores",
+                                    "condensador",
+                                    "capacitor ceramico",
+                                    "capacitor electrolitico",
+                                    "que es un capacitor"
+                        ],
+                        "materiales": [
+                                    "Capacitores cerámicos varios valores",
+                                    "Capacitores electrolíticos varios valores",
+                                    "Multímetro (opcional)"
+                        ],
+                        "explicacion": "<strong>🔋 ¿Qué es un capacitor?</strong> Almacena energía eléctrica temporalmente en forma de campo eléctrico y la libera cuando se necesita.<br><br>\n<strong>📦 Tipos principales:</strong><br>\n• <strong>Cerámico:</strong> Sin polaridad, valores pequeños (pF a µF). Usado para filtrar ruido en circuitos digitales.<br>\n• <strong>Electrolítico:</strong> CON POLARIDAD (pata larga = +, pata corta con franja = −). Valores grandes (µF), usado en fuentes de alimentación.<br>\n• <strong>Tantalio:</strong> Con polaridad, más estable y pequeño que el electrolítico, pero más costoso.<br><br>\n⚠️ <strong>Importante:</strong> Conectar un capacitor electrolítico al revés puede hacer que explote. Siempre verifica la polaridad antes de energizar.",
+                        "codigo": null
+            },
+            {
+                        "keywords": [
+                                    "diodo",
+                                    "diodo rectificador",
+                                    "1n4007",
+                                    "1n4148",
+                                    "que es un diodo"
+                        ],
+                        "materiales": [
+                                    "Diodo rectificador 1N4007",
+                                    "LED (es un tipo de diodo)",
+                                    "Multímetro (modo diodo, opcional)"
+                        ],
+                        "explicacion": "<strong>🔌 ¿Qué es un diodo?</strong> Un componente que permite el paso de corriente en UN SOLO SENTIDO (del ánodo al cátodo).<br><br>\n<strong>🔍 Identificación:</strong> El cátodo tiene una franja pintada en el cuerpo del diodo (o pata más corta en un LED).<br><br>\n<strong>📦 Usos comunes:</strong><br>\n• <strong>Rectificación:</strong> Convertir corriente alterna (AC) en continua (DC), usando 1 o 4 diodos (puente rectificador).<br>\n• <strong>Protección:</strong> Diodo \"flyback\" en paralelo con motores/relés, para absorber picos de voltaje al apagarse.<br>\n• <strong>LED:</strong> Diodo emisor de luz — solo enciende si la corriente circula en el sentido correcto.<br><br>\n💡 Si un LED no enciende, antes de asumir que está dañado, prueba invirtiendo sus terminales.",
+                        "codigo": null
+            },
+            {
+                        "keywords": [
+                                    "transistor",
+                                    "bjt",
+                                    "2n2222",
+                                    "bc547",
+                                    "transistor interruptor",
+                                    "transistor como switch"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Transistor NPN (2N2222 o BC547)",
+                                    "Resistor 1kΩ (base)",
+                                    "LED o carga pequeña",
+                                    "Resistor 220Ω",
+                                    "Cables puente",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Usar un transistor NPN como interruptor controlado por Arduino (para cargas que el pin no puede manejar directo).<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Base → Resistor 1kΩ → Pin digital 9<br>\n• Colector → Carga (LED con resistor 220Ω, o motor pequeño) → +5V<br>\n• Emisor → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nUna pequeña corriente en la base (desde el pin de Arduino) permite que fluya una corriente mucho mayor entre colector y emisor, actuando como un interruptor electrónico controlado digitalmente.",
+                        "codigo": "// Circuit IA — Transistor NPN como interruptor digital\n// Base (vía resistor 1kΩ) -> pin 9\n\nconst int PIN_TRANSISTOR = 9;\n\nvoid setup() {\n  pinMode(PIN_TRANSISTOR, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(PIN_TRANSISTOR, HIGH);  // Activa el transistor (enciende la carga)\n  delay(2000);\n  digitalWrite(PIN_TRANSISTOR, LOW);   // Desactiva el transistor (apaga la carga)\n  delay(2000);\n}"
+            },
+            {
+                        "keywords": [
+                                    "amplificador operacional",
+                                    "lm358",
+                                    "op-amp",
+                                    "comparador de voltaje"
+                        ],
+                        "materiales": [
+                                    "LM358 (amplificador operacional)",
+                                    "Resistores varios",
+                                    "Fuente de alimentación 5-9V",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 ¿Qué hace un Amplificador Operacional?</strong> Compara o amplifica señales de voltaje. El LM358 es uno de los más usados por estudiantes (económico y de doble canal).<br><br>\n<strong>🔌 Uso como comparador de voltaje:</strong><br>\n• Entrada No Inversora (+) → Voltaje de referencia (ej. de un potenciómetro)<br>\n• Entrada Inversora (−) → Señal a comparar (ej. de un sensor)<br>\n• Salida → HIGH si (+) > (−), LOW si (+) < (−)<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEs la base de circuitos como sensores de nivel de agua, detectores de luz analógicos y controladores de temperatura simples, sin necesitar un microcontrolador.",
+                        "codigo": null
+            },
+            {
+                        "keywords": [
+                                    "temporizador 555",
+                                    "ne555",
+                                    "555 astable",
+                                    "led sin arduino",
+                                    "circuito 555"
+                        ],
+                        "materiales": [
+                                    "Circuito integrado NE555",
+                                    "Resistores (2 valores, ej. 10kΩ y 100kΩ)",
+                                    "Capacitor electrolítico 10µF",
+                                    "LED 5mm",
+                                    "Resistor 220Ω",
+                                    "Protoboard",
+                                    "Pila 9V o fuente"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Hacer parpadear un LED SIN usar Arduino, con el clásico circuito integrado 555 en modo astable.<br><br>\n<strong>🔌 Conexiones básicas (modo astable):</strong><br>\n• Pin 8 (VCC) → +9V | Pin 1 (GND) → −<br>\n• Pines 2 y 6 unidos → Capacitor 10µF → GND<br>\n• Pin 7 → Resistores en serie hacia VCC<br>\n• Pin 3 (salida) → LED con resistor 220Ω → GND<br><br>\n<strong>🔢 Fórmula de frecuencia:</strong> f = 1.44 / ((R1 + 2×R2) × C)<br><br>\n<strong>⚙️ Funcionamiento:</strong> El 555 carga y descarga el capacitor repetidamente, generando pulsos HIGH/LOW en su salida (pin 3) sin necesitar ninguna programación.",
+                        "codigo": null
+            },
+            {
+                        "keywords": [
+                                    "esp32",
+                                    "esp8266",
+                                    "wifi arduino",
+                                    "conectar wifi",
+                                    "iot"
+                        ],
+                        "materiales": [
+                                    "Placa ESP32 Dev Module",
+                                    "Cable USB tipo C o Micro-USB (según el modelo)",
+                                    "Red WiFi disponible"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Conectar una placa ESP32 a una red WiFi (primer paso para proyectos IoT).<br><br>\n<strong>🔌 Conexión:</strong> Solo se conecta por USB al computador; el WiFi es inalámbrico, integrado en el chip.<br><br>\n<strong>⚙️ Configuración previa en Arduino IDE:</strong><br>\nArchivo → Preferencias → agregar en \"URLs adicionales de gestor de tarjetas\":<br>\n<code>https://dl.espressif.com/dl/package_esp32_index.json</code><br>\nLuego instala \"esp32\" desde el Gestor de Tarjetas y selecciona tu modelo (ej. \"ESP32 Dev Module\").",
+                        "codigo": "// Circuit IA — Conexión WiFi básica con ESP32\n// Reemplaza NOMBRE_WIFI y CLAVE_WIFI por los datos de tu red\n\n#include <WiFi.h>\n\nconst char* ssid = \"NOMBRE_WIFI\";\nconst char* clave = \"CLAVE_WIFI\";\n\nvoid setup() {\n  Serial.begin(115200);\n  WiFi.begin(ssid, clave);\n\n  Serial.print(\"Conectando a WiFi\");\n  while (WiFi.status() != WL_CONNECTED) {\n    delay(500);\n    Serial.print(\".\");\n  }\n\n  Serial.println(\"\");\n  Serial.println(\"¡Conectado!\");\n  Serial.print(\"Dirección IP: \");\n  Serial.println(WiFi.localIP());\n}\n\nvoid loop() {\n  // Aquí puedes agregar código para enviar datos a un servidor,\n  // leer sensores y publicarlos, etc.\n}"
+            },
+            {
+                        "keywords": [
+                                    "mq-2",
+                                    "sensor de gas",
+                                    "detector de gas",
+                                    "sensor de humo",
+                                    "gas lp"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Sensor de gas MQ-2",
+                                    "Buzzer activo",
+                                    "Cables puente macho-macho x5",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Detectar presencia de gas/humo y activar una alarma sonora.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• VCC → 5V | GND → GND | A0 (salida analógica) → Pin A0<br>\n• Buzzer → Pin digital 8 → GND<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nEl sensor MQ-2 cambia su resistencia interna al detectar gases combustibles o humo. Arduino lee ese valor analógico; si supera un umbral de seguridad, activa el buzzer.<br><br>\n⚠️ <strong>Nota:</strong> El MQ-2 necesita unos minutos de \"precalentamiento\" para dar lecturas estables.",
+                        "codigo": "// Circuit IA — Detector de gas/humo con MQ-2\n// Salida analógica del MQ-2 -> A0, Buzzer -> pin 8\n\nconst int PIN_MQ2 = A0;\nconst int PIN_BUZZER = 8;\nconst int UMBRAL_GAS = 400;  // Ajustar según pruebas en tu ambiente\n\nvoid setup() {\n  pinMode(PIN_BUZZER, OUTPUT);\n  Serial.begin(9600);\n  Serial.println(\"Precalentando sensor MQ-2...\");\n  delay(20000);  // Precalentamiento recomendado (puede ajustarse)\n}\n\nvoid loop() {\n  int nivelGas = analogRead(PIN_MQ2);\n  Serial.println(nivelGas);\n\n  if (nivelGas > UMBRAL_GAS) {\n    digitalWrite(PIN_BUZZER, HIGH);  // ¡Alerta! Gas detectado\n  } else {\n    digitalWrite(PIN_BUZZER, LOW);\n  }\n\n  delay(300);\n}"
+            },
+            {
+                        "keywords": [
+                                    "pantalla oled",
+                                    "ssd1306",
+                                    "display oled",
+                                    "oled i2c"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Pantalla OLED 0.96\" I2C (SSD1306)",
+                                    "Cables puente macho-macho x4",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Mostrar texto y gráficos en una pantalla OLED de alta calidad visual.<br><br>\n<strong>🔌 Conexiones (I2C):</strong><br>\n• VCC → 5V (o 3.3V según el modelo) | GND → GND<br>\n• SDA → A4 | SCL → A5<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nA diferencia del LCD, la OLED no necesita luz de fondo (cada píxel emite su propia luz), dando mejor contraste y permitiendo dibujar gráficos, no solo texto.",
+                        "codigo": "// Circuit IA — Pantalla OLED SSD1306 por I2C\n// SDA -> A4, SCL -> A5\n// Requiere instalar \"Adafruit SSD1306\" y \"Adafruit GFX Library\"\n\n#include <Wire.h>\n#include <Adafruit_GFX.h>\n#include <Adafruit_SSD1306.h>\n\n#define ANCHO_PANTALLA 128\n#define ALTO_PANTALLA 64\n\nAdafruit_SSD1306 display(ANCHO_PANTALLA, ALTO_PANTALLA, &Wire, -1);\n\nvoid setup() {\n  // Dirección I2C común: 0x3C\n  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {\n    Serial.println(\"Error al iniciar la pantalla OLED\");\n    while (true);  // Detiene el programa si falla\n  }\n\n  display.clearDisplay();\n  display.setTextSize(1);\n  display.setTextColor(SSD1306_WHITE);\n  display.setCursor(0, 0);\n  display.println(\"Circuit IA\");\n  display.println(\"Hola Estudiante!\");\n  display.display();\n}\n\nvoid loop() {\n  // El texto queda fijo. Repite display.clearDisplay() + display.print()\n  // + display.display() dentro del loop() para actualizarlo.\n}"
+            },
+            {
+                        "keywords": [
+                                    "motor paso a paso",
+                                    "stepper",
+                                    "28byj-48",
+                                    "uln2003",
+                                    "motor de pasos"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "Motor paso a paso 28BYJ-48",
+                                    "Driver ULN2003",
+                                    "Cables puente macho-macho x6",
+                                    "Fuente externa 5V (recomendada)"
+                        ],
+                        "explicacion": "<strong>🎯 Objetivo:</strong> Controlar la posición y giro de un motor paso a paso con precisión.<br><br>\n<strong>🔌 Conexiones:</strong><br>\n• Driver ULN2003: IN1-IN4 → Pines digitales 8, 9, 10, 11<br>\n• VCC del driver → 5V (idealmente fuente externa) | GND → GND común con Arduino<br>\n• Conector del motor → Conector del driver ULN2003<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nA diferencia de un motor DC, el paso a paso gira en incrementos exactos (pasos), permitiendo controlar la posición sin necesitar un sensor adicional. Ideal para brazos robóticos o mecanismos de precisión.",
+                        "codigo": "// Circuit IA — Motor paso a paso 28BYJ-48 con driver ULN2003\n// IN1-IN4 del driver -> pines 8, 9, 10, 11\n// Usa la librería \"Stepper\" incluida por defecto en el Arduino IDE\n\n#include <Stepper.h>\n\nconst int PASOS_POR_VUELTA = 2048;  // Específico del motor 28BYJ-48\n\nStepper motorPasos(PASOS_POR_VUELTA, 8, 10, 9, 11);  // Orden IN1, IN3, IN2, IN4\n\nvoid setup() {\n  motorPasos.setSpeed(10);  // Velocidad en RPM\n}\n\nvoid loop() {\n  motorPasos.step(PASOS_POR_VUELTA);   // Una vuelta completa en un sentido\n  delay(1000);\n  motorPasos.step(-PASOS_POR_VUELTA);  // Una vuelta completa en sentido contrario\n  delay(1000);\n}"
+            },
+            {
+                        "keywords": [
+                                    "pwm",
+                                    "analogwrite",
+                                    "control de velocidad",
+                                    "modulacion por ancho de pulso"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3",
+                                    "LED 5mm",
+                                    "Resistor 220Ω",
+                                    "Cables puente macho-macho x2",
+                                    "Protoboard"
+                        ],
+                        "explicacion": "<strong>🎯 ¿Qué es PWM?</strong> Modulación por Ancho de Pulso: una técnica para simular una salida analógica encendiendo y apagando un pin digital MUY rápido.<br><br>\n<strong>🔌 Conexión de ejemplo:</strong><br>\n• LED → Resistor 220Ω → Pin 9 (marcado con ~, indica que soporta PWM)<br><br>\n<strong>⚙️ Funcionamiento:</strong><br>\nLa función <em>analogWrite(pin, valor)</em> recibe un valor de 0 (siempre apagado) a 255 (siempre encendido). Valores intermedios generan un brillo o velocidad proporcional, útil para LEDs, motores y sonidos.<br><br>\n📌 Solo los pines marcados con \"~\" en la placa (ej. 3, 5, 6, 9, 10, 11 en el Uno) soportan PWM.",
+                        "codigo": "// Circuit IA — Efecto de brillo gradual (fade) con PWM\n// LED (con resistor 220Ω) -> pin 9 (debe tener el símbolo ~)\n\nconst int PIN_LED = 9;\n\nvoid setup() {\n  pinMode(PIN_LED, OUTPUT);\n}\n\nvoid loop() {\n  // Aumenta el brillo gradualmente\n  for (int brillo = 0; brillo <= 255; brillo++) {\n    analogWrite(PIN_LED, brillo);\n    delay(10);\n  }\n  // Disminuye el brillo gradualmente\n  for (int brillo = 255; brillo >= 0; brillo--) {\n    analogWrite(PIN_LED, brillo);\n    delay(10);\n  }\n}"
+            },
+            {
+                        "keywords": [
+                                    "estructura del codigo",
+                                    "setup loop",
+                                    "sintaxis arduino",
+                                    "variables arduino",
+                                    "como programar arduino"
+                        ],
+                        "materiales": [
+                                    "Arduino IDE instalado (no requiere componentes físicos para este tema)"
+                        ],
+                        "explicacion": "<strong>📖 Estructura básica de un programa Arduino:</strong><br><br>\n<strong>1️⃣ Declaraciones (arriba del todo):</strong> constantes y variables globales.<br>\n<strong>2️⃣ void setup() { }</strong> — Se ejecuta UNA sola vez al iniciar. Aquí van pinMode(), Serial.begin(), configuraciones iniciales.<br>\n<strong>3️⃣ void loop() { }</strong> — Se repite en bucle infinito mientras la placa esté encendida. Aquí va la lógica principal del proyecto.<br><br>\n<strong>🔤 Tipos de datos más usados:</strong><br>\n• <code>int</code> → números enteros (-32768 a 32767)<br>\n• <code>float</code> → números decimales<br>\n• <code>bool</code> → verdadero/falso (true/false)<br>\n• <code>String</code> → texto<br>\n• <code>const int</code> → un número que nunca cambia (ideal para nombres de pines)",
+                        "codigo": "// Circuit IA — Plantilla base de cualquier proyecto Arduino\n\n// 1) Declaraciones globales (constantes, variables, nombres de pines)\nconst int PIN_EJEMPLO = 13;\nint contador = 0;\n\n// 2) setup() -- se ejecuta una sola vez\nvoid setup() {\n  pinMode(PIN_EJEMPLO, OUTPUT);\n  Serial.begin(9600);  // Útil para depurar viendo mensajes en el Monitor Serial\n}\n\n// 3) loop() -- se repite todo el tiempo\nvoid loop() {\n  contador = contador + 1;\n  Serial.println(contador);\n  delay(1000);  // Espera 1 segundo antes de repetir\n}"
+            },
+            {
+                        "keywords": [
+                                    "errores de compilacion",
+                                    "error arduino ide",
+                                    "no compila",
+                                    "error de sintaxis",
+                                    "solucionar error arduino"
+                        ],
+                        "materiales": [
+                                    "Arduino IDE (para ver el mensaje de error exacto)"
+                        ],
+                        "explicacion": "<strong>🐛 Errores comunes al compilar en Arduino IDE:</strong><br><br>\n<strong>1️⃣ \"expected ';' before...\"</strong> → Olvidaste un punto y coma (;) al final de una línea.<br><br>\n<strong>2️⃣ \"was not declared in this scope\"</strong> → Usaste una variable o función que no existe o está mal escrita (revisa mayúsculas/minúsculas).<br><br>\n<strong>3️⃣ \"expected '}' at end of input\"</strong> → Te falta cerrar una llave { }. Cuenta que cada { tenga su } correspondiente.<br><br>\n<strong>4️⃣ \"'nombreLibreria' was not declared\"</strong> → Olvidaste el #include de la librería, o no la has instalado (Herramientas → Gestionar Librerías).<br><br>\n<strong>5️⃣ \"no such file or directory\"</strong> → Falta instalar una librería o el nombre del archivo/placa está mal configurado en Herramientas → Placa.<br><br>\n💡 <strong>Consejo:</strong> Lee siempre la PRIMERA línea de error en la consola inferior — las líneas siguientes suelen ser consecuencia de esa primera.",
+                        "codigo": null
+            },
+            {
+                        "keywords": [
+                                    "pines analogicos digitales",
+                                    "diferencia analogico digital",
+                                    "a0 a5",
+                                    "pines pwm"
+                        ],
+                        "materiales": [
+                                    "Arduino Uno R3 (para observar directamente en la placa)"
+                        ],
+                        "explicacion": "<strong>🔢 Pines Digitales vs Analógicos:</strong><br><br>\n<strong>Pines Digitales (0-13):</strong> Solo manejan 2 estados: HIGH (5V) o LOW (0V). Se usan con <code>pinMode()</code>, <code>digitalWrite()</code> y <code>digitalRead()</code>. Los marcados con \"~\" también soportan PWM (simulan analógico de salida).<br><br>\n<strong>Pines Analógicos de Entrada (A0-A5):</strong> Leen un rango continuo de voltaje (0 a 5V) y lo convierten a un número de 0 a 1023 con <code>analogRead()</code>. Se usan para sensores como potenciómetros, LDR, etc.<br><br>\n<strong>⚠️ Importante:</strong> No existen pines \"analógicos de salida\" reales en el Arduino Uno — lo que se usa es PWM (analogWrite) en pines digitales especiales, que SIMULA una salida analógica.",
+                        "codigo": null
             }
-        ];
+];
 
         const defaultResponse = {
             materiales: [
@@ -501,40 +843,147 @@ El HC-05 crea un puente serial inalámbrico: lo que se escribe desde una app de 
                 "Componentes electrónicos según el circuito",
                 "Multímetro para mediciones (recomendado)"
             ],
+            codigo: null,
             explicacion: `
 Gracias por tu consulta. Como no reconozco el circuito exacto, te doy orientación general:<br><br>
 • <strong>Explícame con más detalle:</strong> ¿Qué quieres construir, qué componentes tienes o qué función necesitas?<br>
 • <strong>Ejemplos de preguntas que puedes hacerme:</strong><br>
   → "¿Cómo conectar un LED con Arduino?"<br>
   → "Materiales para usar un sensor de distancia"<br>
-  → "Explicación de un circuito con pulsador"<br><br>
-✍️ Cuéntame más y te daré los materiales exactos + conexiones paso a paso.
+  → "Diferencia entre pines analógicos y digitales"<br>
+  → "Errores comunes de compilación"<br><br>
+✍️ Cuéntame más y te daré los materiales exactos + conexiones paso a paso + el código listo para usar.
             `
         };
 
+        // ============================================================
+        // MOTOR DE BÚSQUEDA — comparación por puntuación (no solo exacta)
+        // ============================================================
+        function normalizarTexto(txt) {
+            return txt
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // quita tildes
+                .replace(/[^a-z0-9ñ\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function getResponse(query) {
+            const q = normalizarTexto(query);
+            const qWords = new Set(q.split(' ').filter(w => w.length > 2));
+
+            let mejorItem = null;
+            let mejorPuntaje = 0;
+
+            for (const item of knowledgeBase) {
+                let puntajeFrases = 0;
+                const palabrasUnicas = new Set();
+
+                for (const kw of item.keywords) {
+                    const nkw = normalizarTexto(kw);
+                    if (!nkw) continue;
+
+                    if (q.includes(nkw)) {
+                        // Coincidencia de frase completa: mayor peso, según su longitud
+                        puntajeFrases += nkw.split(' ').length * 3;
+                    }
+                    // Se acumulan palabras únicas del ítem (sin duplicar aunque
+                    // se repitan en varias keywords), para no inflar el puntaje
+                    // de palabras genéricas que aparecen en muchas frases del mismo ítem.
+                    nkw.split(' ').forEach(w => { if (w.length > 2) palabrasUnicas.add(w); });
+                }
+
+                let puntajePalabras = 0;
+                palabrasUnicas.forEach(w => { if (qWords.has(w)) puntajePalabras += 1; });
+
+                const puntaje = puntajeFrases + puntajePalabras;
+                if (puntaje > mejorPuntaje) {
+                    mejorPuntaje = puntaje;
+                    mejorItem = item;
+                }
+            }
+
+            if (mejorItem && mejorPuntaje >= 2) {
+                return mejorItem;
+            }
+            return { ...defaultResponse };
+        }
+
+        // ============================================================
+        // RENDERIZADO DE MENSAJES (con soporte de bloques de código)
+        // ============================================================
         const chatContainer = document.getElementById('chatContainer');
         const chatForm = document.getElementById('chatForm');
         const userInput = document.getElementById('userInput');
         const btnClear = document.getElementById('btnClear');
 
-        function getResponse(query) {
-            const lowerQuery = query.toLowerCase();
-            for (const item of knowledgeBase) {
-                const match = item.keywords.some(keyword => lowerQuery.includes(keyword.toLowerCase()));
-                if (match) return item;
-            }
-            return {...defaultResponse};
+        let codeCounter = 0;
+        const codeStore = {};
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
 
-        function addMessage(sender, text, materiales = null) {
+        function copiarCodigo(id) {
+            const texto = codeStore[id];
+            if (!texto) return;
+            const boton = document.getElementById('btn-copiar-' + id);
+
+            const marcarCopiado = () => {
+                if (!boton) return;
+                const original = boton.innerHTML;
+                boton.innerHTML = '<i class="fa fa-check mr-1"></i>¡Copiado!';
+                setTimeout(() => { boton.innerHTML = original; }, 1500);
+            };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(texto).then(marcarCopiado).catch(() => {
+                    fallbackCopiar(texto, marcarCopiado);
+                });
+            } else {
+                fallbackCopiar(texto, marcarCopiado);
+            }
+        }
+
+        function fallbackCopiar(texto, callback) {
+            const textarea = document.createElement('textarea');
+            textarea.value = texto;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try { document.execCommand('copy'); callback(); } catch (e) {}
+            document.body.removeChild(textarea);
+        }
+
+        function construirBloqueCodigo(codigo) {
+            const id = codeCounter++;
+            codeStore[id] = codigo;
+            const codigoEscapado = escapeHtml(codigo);
+            return `
+                <div class="mt-3 rounded-lg overflow-hidden border border-slate-700">
+                    <div class="flex items-center justify-between bg-slate-800 text-slate-200 text-xs px-3 py-1.5">
+                        <span><i class="fa fa-code mr-1"></i> Código Arduino (.ino)</span>
+                        <button id="btn-copiar-${id}" onclick="copiarCodigo(${id})" class="hover:text-accent transition-colors bg-white/10 hover:bg-white/20 px-2 py-1 rounded">
+                            <i class="fa fa-copy mr-1"></i>Copiar
+                        </button>
+                    </div>
+                    <pre class="bg-slate-950 text-green-300 text-xs p-3 overflow-x-auto m-0"><code>${codigoEscapado}</code></pre>
+                </div>
+            `;
+        }
+
+        function addMessage(sender, text, materiales = null, codigo = null) {
             const messageDiv = document.createElement('div');
             messageDiv.className = 'flex gap-3 animate-fade-in';
-            
+
             if (sender === 'user') {
                 messageDiv.classList.add('justify-end');
                 messageDiv.innerHTML = `
                     <div class="chat-bubble-user max-w-[85%]">
-                        <p>${text}</p>
+                        <p>${escapeHtml(text)}</p>
                     </div>
                     <div class="w-8 h-8 rounded-full bg-slate-200 flex-shrink-0 flex items-center justify-center text-slate-600">
                         <i class="fa fa-user"></i>
@@ -552,6 +1001,7 @@ Gracias por tu consulta. Como no reconozco el circuito exacto, te doy orientaci�
                         </div>
                     `;
                 }
+                const codigoHTML = codigo ? construirBloqueCodigo(codigo) : '';
                 messageDiv.innerHTML = `
                     <div class="w-8 h-8 rounded-full bg-primary flex-shrink-0 flex items-center justify-center text-white">
                         <i class="fa fa-microchip"></i>
@@ -559,10 +1009,11 @@ Gracias por tu consulta. Como no reconozco el circuito exacto, te doy orientaci�
                     <div class="chat-bubble-ai max-w-[85%]">
                         ${materialesHTML}
                         <div class="mt-2">${text}</div>
+                        ${codigoHTML}
                     </div>
                 `;
             }
-            
+
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
@@ -592,16 +1043,16 @@ Gracias por tu consulta. Como no reconozco el circuito exacto, te doy orientaci�
             e.preventDefault();
             const query = userInput.value.trim();
             if (!query) return;
-            
+
             addMessage('user', query);
             userInput.value = '';
-            
+
             showTyping();
-            
+
             setTimeout(() => {
                 hideTyping();
                 const respuesta = getResponse(query);
-                addMessage('ai', respuesta.explicacion, respuesta.materiales);
+                addMessage('ai', respuesta.explicacion, respuesta.materiales, respuesta.codigo);
             }, 800 + Math.random() * 600);
         });
 
@@ -615,6 +1066,314 @@ Gracias por tu consulta. Como no reconozco el circuito exacto, te doy orientaci�
         window.addEventListener('load', () => {
             userInput.focus();
         });
+
+        // ============================================================
+        // HERRAMIENTAS DE CÁMARA
+        // ============================================================
+
+        // --- Tabla de colores estándar para código de resistencias ---
+        const COLORES_RESISTENCIA = [
+            { nombre: 'Negro',    rgb: [25, 25, 25],   digito: 0, mult: 1,          tol: null },
+            { nombre: 'Marrón',   rgb: [110, 66, 25],  digito: 1, mult: 10,         tol: 1 },
+            { nombre: 'Rojo',     rgb: [200, 40, 40],  digito: 2, mult: 100,        tol: 2 },
+            { nombre: 'Naranja',  rgb: [235, 130, 40], digito: 3, mult: 1000,       tol: null },
+            { nombre: 'Amarillo', rgb: [230, 210, 40], digito: 4, mult: 10000,      tol: null },
+            { nombre: 'Verde',    rgb: [50, 140, 60],  digito: 5, mult: 100000,     tol: 0.5 },
+            { nombre: 'Azul',     rgb: [40, 80, 190],  digito: 6, mult: 1000000,    tol: 0.25 },
+            { nombre: 'Violeta',  rgb: [130, 60, 160], digito: 7, mult: 10000000,   tol: 0.1 },
+            { nombre: 'Gris',     rgb: [140, 140, 140],digito: 8, mult: 100000000,  tol: 0.05 },
+            { nombre: 'Blanco',   rgb: [245, 245, 245],digito: 9, mult: 1000000000, tol: null },
+            { nombre: 'Dorado',   rgb: [200, 160, 60], digito: null, mult: 0.1,     tol: 5 },
+            { nombre: 'Plateado', rgb: [190, 190, 195],digito: null, mult: 0.01,    tol: 10 }
+        ];
+
+        function colorMasCercano(r, g, b) {
+            let mejor = COLORES_RESISTENCIA[0];
+            let menorDistancia = Infinity;
+            for (const c of COLORES_RESISTENCIA) {
+                const d = Math.pow(r - c.rgb[0], 2) + Math.pow(g - c.rgb[1], 2) + Math.pow(b - c.rgb[2], 2);
+                if (d < menorDistancia) {
+                    menorDistancia = d;
+                    mejor = c;
+                }
+            }
+            return mejor;
+        }
+
+        function formatearResistencia(ohmios) {
+            if (ohmios >= 1000000) return (ohmios / 1000000).toFixed(2).replace(/\.00$/, '') + ' MΩ';
+            if (ohmios >= 1000) return (ohmios / 1000).toFixed(2).replace(/\.00$/, '') + ' kΩ';
+            return ohmios.toFixed(2).replace(/\.00$/, '') + ' Ω';
+        }
+
+        function calcularResistencia(bandas) {
+            if (bandas.length === 4) {
+                const [b1, b2, b3, b4] = bandas;
+                const valor = (b1.digito * 10 + b2.digito) * b3.mult;
+                return { valor, tolerancia: b4.tol };
+            } else if (bandas.length === 5) {
+                const [b1, b2, b3, b4, b5] = bandas;
+                const valor = (b1.digito * 100 + b2.digito * 10 + b3.digito) * b4.mult;
+                return { valor, tolerancia: b5.tol };
+            }
+            return null;
+        }
+
+        // --- Estado y elementos del modal de cámara ---
+        const btnCamara = document.getElementById('btnCamara');
+        const modalCamara = document.getElementById('cameraModal');
+        const btnCerrarCamara = document.getElementById('btnCerrarCamara');
+        const tabResistencia = document.getElementById('tabResistencia');
+        const tabBitacora = document.getElementById('tabBitacora');
+        const panelResistencia = document.getElementById('panelResistencia');
+        const panelBitacora = document.getElementById('panelBitacora');
+
+        let streamResistencia = null;
+        let streamBitacora = null;
+        let bandasSeleccionadas = [];
+        let numBandasObjetivo = 4;
+
+        function abrirModalCamara() {
+            modalCamara.classList.remove('hidden');
+            modalCamara.classList.add('flex');
+        }
+
+        function cerrarModalCamara() {
+            modalCamara.classList.add('hidden');
+            modalCamara.classList.remove('flex');
+            detenerStream(streamResistencia);
+            detenerStream(streamBitacora);
+            streamResistencia = null;
+            streamBitacora = null;
+        }
+
+        function detenerStream(stream) {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        async function iniciarStream(videoEl) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' },
+                    audio: false
+                });
+                videoEl.srcObject = stream;
+                return stream;
+            } catch (err) {
+                alert('No se pudo acceder a la cámara. Verifica los permisos del navegador.\\n\\n' + err.message);
+                return null;
+            }
+        }
+
+        btnCamara.addEventListener('click', abrirModalCamara);
+        btnCerrarCamara.addEventListener('click', cerrarModalCamara);
+
+        tabResistencia.addEventListener('click', () => {
+            tabResistencia.classList.add('border-primary', 'text-primary');
+            tabResistencia.classList.remove('text-slate-500', 'border-transparent');
+            tabBitacora.classList.remove('border-primary', 'text-primary');
+            tabBitacora.classList.add('text-slate-500', 'border-transparent');
+            panelResistencia.classList.remove('hidden');
+            panelBitacora.classList.add('hidden');
+            detenerStream(streamBitacora);
+            streamBitacora = null;
+        });
+
+        tabBitacora.addEventListener('click', () => {
+            tabBitacora.classList.add('border-primary', 'text-primary');
+            tabBitacora.classList.remove('text-slate-500', 'border-transparent');
+            tabResistencia.classList.remove('border-primary', 'text-primary');
+            tabResistencia.classList.add('text-slate-500', 'border-transparent');
+            panelBitacora.classList.remove('hidden');
+            panelResistencia.classList.add('hidden');
+            detenerStream(streamResistencia);
+            streamResistencia = null;
+            renderizarBitacora();
+        });
+
+        // --- Panel: Escáner de Resistencias ---
+        const videoResistencia = document.getElementById('videoCamara');
+        const canvasResistencia = document.getElementById('canvasCamara');
+        const btnIniciarCamara = document.getElementById('btnIniciarCamara');
+        const btnCongelar = document.getElementById('btnCongelar');
+        const btnReiniciarLectura = document.getElementById('btnReiniciarLectura');
+        const bandasDetectadasDiv = document.getElementById('bandasDetectadas');
+        const resultadoResistenciaDiv = document.getElementById('resultadoResistencia');
+        const selectorBandas = document.getElementById('selectorBandas');
+
+        if (selectorBandas) {
+            selectorBandas.addEventListener('change', (e) => {
+                numBandasObjetivo = parseInt(e.target.value, 10);
+                reiniciarLectura();
+            });
+        }
+
+        btnIniciarCamara.addEventListener('click', async () => {
+            streamResistencia = await iniciarStream(videoResistencia);
+            if (streamResistencia) {
+                videoResistencia.classList.remove('hidden');
+                canvasResistencia.classList.add('hidden');
+                btnIniciarCamara.classList.add('hidden');
+                btnCongelar.classList.remove('hidden');
+                btnReiniciarLectura.classList.remove('hidden');
+            }
+        });
+
+        btnCongelar.addEventListener('click', () => {
+            const ctx = canvasResistencia.getContext('2d');
+            canvasResistencia.width = videoResistencia.videoWidth;
+            canvasResistencia.height = videoResistencia.videoHeight;
+            ctx.drawImage(videoResistencia, 0, 0);
+
+            videoResistencia.classList.add('hidden');
+            canvasResistencia.classList.remove('hidden');
+            detenerStream(streamResistencia);
+            streamResistencia = null;
+        });
+
+        canvasResistencia.addEventListener('click', (e) => {
+            if (canvasResistencia.classList.contains('hidden')) return;
+            if (bandasSeleccionadas.length >= numBandasObjetivo) return;
+
+            const rect = canvasResistencia.getBoundingClientRect();
+            const escalaX = canvasResistencia.width / rect.width;
+            const escalaY = canvasResistencia.height / rect.height;
+            const x = Math.round((e.clientX - rect.left) * escalaX);
+            const y = Math.round((e.clientY - rect.top) * escalaY);
+
+            const ctx = canvasResistencia.getContext('2d');
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            const color = colorMasCercano(pixel[0], pixel[1], pixel[2]);
+
+            bandasSeleccionadas.push(color);
+            renderizarBandas();
+
+            if (bandasSeleccionadas.length === numBandasObjetivo) {
+                const resultado = calcularResistencia(bandasSeleccionadas);
+                if (resultado) {
+                    const tolTexto = resultado.tolerancia !== null ? ` ±${resultado.tolerancia}%` : '';
+                    resultadoResistenciaDiv.textContent = formatearResistencia(resultado.valor) + tolTexto;
+                    resultadoResistenciaDiv.classList.remove('hidden');
+                }
+            }
+        });
+
+        function renderizarBandas() {
+            bandasDetectadasDiv.innerHTML = bandasSeleccionadas.map((c, i) => `
+                <div class="flex items-center gap-1 bg-slate-100 rounded-full pl-1 pr-2 py-1 text-xs">
+                    <span class="w-4 h-4 rounded-full border border-slate-300 inline-block" style="background: rgb(${c.rgb[0]},${c.rgb[1]},${c.rgb[2]})"></span>
+                    ${c.nombre}
+                </div>
+            `).join('');
+        }
+
+        function reiniciarLectura() {
+            bandasSeleccionadas = [];
+            renderizarBandas();
+            resultadoResistenciaDiv.classList.add('hidden');
+            resultadoResistenciaDiv.textContent = '';
+            canvasResistencia.classList.add('hidden');
+            videoResistencia.classList.remove('hidden');
+            btnIniciarCamara.classList.remove('hidden');
+            btnCongelar.classList.add('hidden');
+            btnReiniciarLectura.classList.add('hidden');
+            detenerStream(streamResistencia);
+            streamResistencia = null;
+        }
+
+        btnReiniciarLectura.addEventListener('click', reiniciarLectura);
+
+        // --- Panel: Bitácora de Proyectos ---
+        const videoBitacora = document.getElementById('videoBitacora');
+        const canvasBitacora = document.getElementById('canvasBitacora');
+        const btnIniciarCamaraBitacora = document.getElementById('btnIniciarCamaraBitacora');
+        const btnCapturarFoto = document.getElementById('btnCapturarFoto');
+        const notaBitacora = document.getElementById('notaBitacora');
+        const btnGuardarBitacora = document.getElementById('btnGuardarBitacora');
+        const listaBitacora = document.getElementById('listaBitacora');
+        const formCapturaBitacora = document.getElementById('formCapturaBitacora');
+
+        let fotoCapturadaDataURL = null;
+        const CLAVE_BITACORA = 'circuitia_bitacora';
+
+        btnIniciarCamaraBitacora.addEventListener('click', async () => {
+            streamBitacora = await iniciarStream(videoBitacora);
+            if (streamBitacora) {
+                videoBitacora.classList.remove('hidden');
+                btnIniciarCamaraBitacora.classList.add('hidden');
+                btnCapturarFoto.classList.remove('hidden');
+            }
+        });
+
+        btnCapturarFoto.addEventListener('click', () => {
+            canvasBitacora.width = videoBitacora.videoWidth;
+            canvasBitacora.height = videoBitacora.videoHeight;
+            const ctx = canvasBitacora.getContext('2d');
+            ctx.drawImage(videoBitacora, 0, 0);
+            fotoCapturadaDataURL = canvasBitacora.toDataURL('image/jpeg', 0.7);
+
+            videoBitacora.classList.add('hidden');
+            canvasBitacora.classList.remove('hidden');
+            detenerStream(streamBitacora);
+            streamBitacora = null;
+            formCapturaBitacora.classList.remove('hidden');
+        });
+
+        btnGuardarBitacora.addEventListener('click', () => {
+            if (!fotoCapturadaDataURL) return;
+            const entradas = obtenerBitacora();
+            entradas.unshift({
+                img: fotoCapturadaDataURL,
+                nota: notaBitacora.value.trim() || '(Sin nota)',
+                fecha: new Date().toLocaleString('es-CO')
+            });
+            localStorage.setItem(CLAVE_BITACORA, JSON.stringify(entradas));
+
+            fotoCapturadaDataURL = null;
+            notaBitacora.value = '';
+            formCapturaBitacora.classList.add('hidden');
+            canvasBitacora.classList.add('hidden');
+            btnCapturarFoto.classList.add('hidden');
+            btnIniciarCamaraBitacora.classList.remove('hidden');
+            renderizarBitacora();
+        });
+
+        function obtenerBitacora() {
+            try {
+                return JSON.parse(localStorage.getItem(CLAVE_BITACORA)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function eliminarEntradaBitacora(indice) {
+            const entradas = obtenerBitacora();
+            entradas.splice(indice, 1);
+            localStorage.setItem(CLAVE_BITACORA, JSON.stringify(entradas));
+            renderizarBitacora();
+        }
+
+        function renderizarBitacora() {
+            const entradas = obtenerBitacora();
+            if (entradas.length === 0) {
+                listaBitacora.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">Aún no has guardado fotos de tus proyectos.</p>';
+                return;
+            }
+            listaBitacora.innerHTML = entradas.map((e, i) => `
+                <div class="flex gap-3 items-start border border-slate-200 rounded-lg p-2">
+                    <img src="${e.img}" class="w-16 h-16 object-cover rounded-lg flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-slate-700 break-words">${escapeHtml(e.nota)}</p>
+                        <p class="text-xs text-slate-400">${escapeHtml(e.fecha)}</p>
+                    </div>
+                    <button onclick="eliminarEntradaBitacora(${i})" class="text-slate-400 hover:text-red-500 transition-colors">
+                        <i class="fa fa-trash-o"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
 
         // === Registro del Service Worker (funcionamiento offline) ===
         if ('serviceWorker' in navigator) {
