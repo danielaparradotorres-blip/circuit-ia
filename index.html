@@ -10,6 +10,7 @@
     <meta name="theme-color" content="#0E5A48" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#0B1512" media="(prefers-color-scheme: dark)">
     <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
     <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -613,6 +614,7 @@
             <button class="btn-icon only-mobile" id="btnMenu" aria-label="Abrir menú"><span data-i="menu"></span></button>
             <h1 id="tituloVista">Nueva conversación</h1>
             <button class="btn-icon" id="btnExportar" aria-label="Exportar conversación a PDF" title="Exportar a PDF" hidden><span data-i="printer"></span></button>
+            <button class="btn-icon only-mobile" id="btnInstallTop" aria-label="Instalar app" title="Instalar app" hidden><span data-i="download"></span></button>
             <button class="btn-icon only-mobile" id="btnNuevoTop" aria-label="Nueva conversación"><span data-i="plus"></span></button>
         </header>
 
@@ -772,6 +774,17 @@
 </div>
 
 <!-- ================= MODAL: FOTO PARA PREGUNTAR ================= -->
+<!-- ================= MODAL: INSTALAR APP ================= -->
+<div class="modal" id="modalInstalar" role="dialog" aria-modal="true" aria-labelledby="modalInstalarTitulo" hidden>
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3 id="modalInstalarTitulo">Instalar Circuit IA</h3>
+            <button class="btn-icon" id="btnCerrarInstalar" aria-label="Cerrar"><span data-i="x"></span></button>
+        </div>
+        <div class="modal-body" id="instalarPasos"></div>
+    </div>
+</div>
+
 <div class="modal" id="modalFoto" role="dialog" aria-modal="true" aria-labelledby="modalFotoTitulo" hidden>
     <div class="modal-box">
         <div class="modal-head">
@@ -3453,6 +3466,9 @@ function dibujarEsquema(e) {
 
     // Cables
     let bucleIzq = 0, bucleDer = 0, insignias = '';
+    const puestas = [];
+    // Punto de la curva Bézier en t, para ubicar cada número sin que se tape con otro
+    const puntoCurva = (q, t) => { const u = 1 - t; return { x: u*u*u*q[0].x + 3*u*u*t*q[1].x + 3*u*t*t*q[2].x + t*t*t*q[3].x, y: u*u*u*q[0].y + 3*u*u*t*q[1].y + 3*u*t*t*q[2].y + t*t*t*q[3].y }; };
     e.conexiones.forEach((cx, i) => {
         const p1 = pos[cx.a.dueno + '.' + cx.a.pin], p2 = pos[cx.b.dueno + '.' + cx.b.pin];
         if (!p1 || !p2) return;
@@ -3474,7 +3490,15 @@ function dibujarEsquema(e) {
         }
         const [a, k1, k2, b] = cx.p;
         const d = `M${a.x} ${a.y}C${k1.x} ${k1.y} ${k2.x} ${k2.y} ${b.x} ${b.y}`;
-        const mx = (a.x + 3 * k1.x + 3 * k2.x + b.x) / 8, my = (a.y + 3 * k1.y + 3 * k2.y + b.y) / 8;
+        let mejor = null, mejorDist = -1;
+        for (const t of [0.5, 0.4, 0.6, 0.32, 0.68, 0.25, 0.75, 0.18, 0.82]) {
+            const pt = puntoCurva(cx.p, t);
+            const dist = puestas.length ? Math.min(...puestas.map(o => Math.hypot(o.x - pt.x, o.y - pt.y))) : Infinity;
+            if (dist >= 26) { mejor = pt; break; }
+            if (dist > mejorDist) { mejorDist = dist; mejor = pt; }
+        }
+        puestas.push(mejor);
+        const mx = mejor.x, my = mejor.y;
         svg += `<g class="w" data-n="${i}">`;
         svg += `<path d="${d}" fill="none" stroke="transparent" stroke-width="14"/>`;
         svg += `<path d="${d}" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"/>`;
@@ -3719,16 +3743,78 @@ if ('serviceWorker' in navigator) {
     });
 }
 const btnInstall = $('btnInstall');
+const btnInstallTop = $('btnInstallTop');
 let deferredPrompt = null;
-window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; btnInstall.hidden = false; });
-btnInstall.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') btnInstall.hidden = true;
-    deferredPrompt = null;
+
+// Ya está abierta como app instalada: no se muestra el botón
+function esAppInstalada() {
+    return matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+}
+function mostrarBotonesInstalar(mostrar) {
+    btnInstall.hidden = !mostrar;
+    btnInstallTop.hidden = !mostrar;
+}
+mostrarBotonesInstalar(!esAppInstalada());
+
+window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    mostrarBotonesInstalar(true);
 });
-window.addEventListener('appinstalled', () => { btnInstall.hidden = true; });
+
+// Instrucciones según el dispositivo cuando el navegador no ofrece la instalación directa
+function pasosInstalacion() {
+    const ua = navigator.userAgent;
+    const ios = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const android = /Android/i.test(ua);
+    const dentroDeApp = /FBAN|FBAV|Instagram|WhatsApp|Line|wv\)/i.test(ua);
+    const samsung = /SamsungBrowser/i.test(ua);
+    const firefox = /Firefox|FxiOS/i.test(ua);
+    if (dentroDeApp) return {
+        intro: 'Abriste el enlace dentro de otra aplicación (WhatsApp, Instagram o Facebook), y desde ahí no se puede instalar.',
+        pasos: ['Toca el menú de tres puntos o el ícono de compartir.', 'Elige <b>Abrir en el navegador</b> (Chrome en Android, Safari en iPhone).', 'Vuelve a tocar <b>Instalar app</b>.']
+    };
+    if (ios) return {
+        intro: 'En iPhone y iPad la instalación se hace desde el menú Compartir.',
+        pasos: ['Abre esta página en <b>Safari</b>.', 'Toca el botón <b>Compartir</b> (el cuadrado con la flecha hacia arriba).', 'Desliza y elige <b>Agregar a pantalla de inicio</b>.', 'Toca <b>Agregar</b>. El ícono de Circuit IA aparecerá en tu pantalla.']
+    };
+    if (samsung) return {
+        intro: 'En Samsung Internet:',
+        pasos: ['Toca el menú (tres líneas) abajo a la derecha.', 'Elige <b>Agregar página a</b> y luego <b>Pantalla de inicio</b>.']
+    };
+    if (android && !firefox) return {
+        intro: 'En Android con Chrome:',
+        pasos: ['Toca el menú de tres puntos <b>⋮</b> arriba a la derecha.', 'Elige <b>Instalar aplicación</b> o <b>Agregar a la pantalla principal</b>.', 'Confirma con <b>Instalar</b>.']
+    };
+    if (firefox) return {
+        intro: 'Firefox en computador no permite instalar aplicaciones web.',
+        pasos: ['Abre esta página en <b>Google Chrome</b> o <b>Microsoft Edge</b>.', 'Vuelve a tocar <b>Instalar app</b>.']
+    };
+    return {
+        intro: 'En computador con Chrome o Edge:',
+        pasos: ['Busca el ícono de instalar al final de la barra de direcciones (una pantalla con una flecha).', 'Si no aparece, abre el menú <b>⋮</b> → <b>Transmitir, guardar y compartir</b> → <b>Instalar página como aplicación</b>.', 'Confirma con <b>Instalar</b>.']
+    };
+}
+
+async function instalarApp() {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        if (outcome === 'accepted') mostrarBotonesInstalar(false);
+        return;
+    }
+    const info = pasosInstalacion();
+    $('instalarPasos').innerHTML = `<p>${info.intro}</p><ol style="margin:0 0 6px;padding-left:22px;font-size:15px;line-height:1.7">${info.pasos.map(p => `<li>${p}</li>`).join('')}</ol>
+        <p style="margin-top:14px;font-size:13.5px">Si ya la instalaste antes, búscala entre tus aplicaciones con el nombre <b>Circuit IA</b>.</p>`;
+    $('modalInstalar').hidden = false;
+    cerrarSidebar();
+}
+btnInstall.addEventListener('click', instalarApp);
+btnInstallTop.addEventListener('click', instalarApp);
+$('btnCerrarInstalar').addEventListener('click', () => { $('modalInstalar').hidden = true; });
+$('modalInstalar').addEventListener('click', e => { if (e.target === $('modalInstalar')) $('modalInstalar').hidden = true; });
+window.addEventListener('appinstalled', () => { mostrarBotonesInstalar(false); toast('Circuit IA quedó instalada en tu dispositivo'); });
 
 // ============================================================
 // INICIO

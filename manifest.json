@@ -1,32 +1,19 @@
 {
-  "name": "Circuit IA — Asistente de Electrónica",
+  "name": "Circuit IA — Tutor de electrónica",
   "short_name": "Circuit IA",
-  "description": "Asistente inteligente de electrónica para estudiantes: consulta circuitos, materiales y conexiones paso a paso.",
-  "start_url": "./index.html",
+  "description": "Tutor de electrónica con inteligencia artificial: responde dudas, analiza fotos de tu montaje y genera esquemas de conexión.",
+  "id": "./",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#EFF6FF",
-  "theme_color": "#1E40AF",
-  "lang": "es",
+  "orientation": "any",
+  "lang": "es-CO",
+  "background_color": "#F3F5F2",
+  "theme_color": "#0E5A48",
+  "categories": ["education", "utilities"],
   "icons": [
-    {
-      "src": "icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icons/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ]
 }

@@ -1,6 +1,6 @@
 // Circuit IA — Service Worker
 // Sube el número de versión cada vez que publiques cambios en index.html
-const CACHE = 'circuitia-v4';
+const CACHE = 'circuitia-v5';
 
 const PRECACHE = [
     './',
@@ -9,6 +9,9 @@ const PRECACHE = [
     './icons/favicon-32.png',
     './icons/favicon-16.png',
     './icons/apple-touch-icon.png',
+    './icons/icon-192.png',
+    './icons/icon-512.png',
+    './icons/icon-maskable-512.png',
     'https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js',
     'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js',
