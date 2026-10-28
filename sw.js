@@ -1,6 +1,6 @@
 // Circuit IA — Service Worker
 // Sube el número de versión cada vez que publiques cambios en index.html
-const CACHE = 'circuitia-v5';
+const CACHE = 'circuitia-v6';
 
 const PRECACHE = [
     './',

@@ -466,6 +466,16 @@
         .bit-item .txt small { display: block; color: var(--muted); font-size: 12px; }
         .bit-item .acts { display: flex; flex-direction: column; gap: 2px; }
         .inline-msg { font-size: 13px; color: var(--danger); margin-top: 8px; }
+        .cam-ctrl { position: absolute; top: 10px; right: 10px; display: flex; gap: 8px; z-index: 2; }
+        .cam-btn { width: 42px; height: 42px; border-radius: 50%; border: 0; background: rgba(0,0,0,.55); color: #fff; display: grid; place-items: center; }
+        .cam-btn:hover { background: rgba(0,0,0,.75); }
+        .cam-btn.on { background: #F4B400; color: #111; }
+        .guia-res { position: absolute; left: 8%; right: 8%; top: 36%; height: 28%; border: 2px dashed rgba(255,255,255,.75); border-radius: 12px; pointer-events: none; display: flex; align-items: flex-end; justify-content: center; }
+        .guia-res span { font-size: 12px; color: #fff; background: rgba(0,0,0,.45); padding: 2px 8px; border-radius: 6px; margin-bottom: -26px; }
+        .banda-sel { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border-radius: 999px; padding: 3px 8px 3px 4px; }
+        .banda-sel b { font: 600 12px var(--mono); color: var(--muted); }
+        .banda-sel i { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--line); flex: none; }
+        .banda-sel select { border: 0; background: transparent; font-size: 13px; color: var(--ink); max-width: 110px; }
 
         /* ============================================================
            MODAL CÁMARA
@@ -721,7 +731,7 @@
                     <!-- Lector de resistencias -->
                     <div class="tool">
                         <h3>Lector de resistencias</h3>
-                        <p>Congela la imagen y toca cada banda de color en orden, de izquierda a derecha.</p>
+                        <p>Toma o sube una foto, toca cada banda en orden de izquierda a derecha y corrige el color si hace falta.</p>
                         <div class="field" style="margin-bottom:10px">
                             <label for="selectorBandas">Número de bandas</label>
                             <select id="selectorBandas" class="select">
@@ -730,18 +740,31 @@
                             </select>
                         </div>
                         <div class="cam">
-                            <div class="cam-empty" id="camResVacia">La cámara está apagada</div>
+                            <div class="cam-empty" id="camResVacia">Enciende la cámara o sube una foto de la resistencia</div>
                             <video id="videoCamara" autoplay playsinline muted hidden></video>
                             <canvas id="canvasCamara" class="pick" hidden></canvas>
+                            <div class="guia-res" id="guiaRes" hidden><span>Centra la resistencia aquí</span></div>
+                            <div class="cam-ctrl">
+                                <button class="cam-btn" id="btnLinternaRes" aria-label="Encender o apagar la linterna" title="Linterna" hidden><span data-i="zap"></span></button>
+                                <button class="cam-btn" id="btnCambiarRes" aria-label="Cambiar de cámara" title="Cambiar de cámara" hidden><span data-i="refresh"></span></button>
+                            </div>
                         </div>
                         <div class="tool-row">
                             <button id="btnIniciarCamara" class="btn primary"><span data-i="camera"></span>Encender cámara</button>
-                            <button id="btnCongelar" class="btn primary" hidden>Congelar imagen</button>
-                            <button id="btnReiniciarLectura" class="btn" hidden><span data-i="refresh"></span>Reiniciar</button>
+                            <button id="btnSubirRes" class="btn"><span data-i="image"></span>Subir foto</button>
+                            <button id="btnCongelar" class="btn primary" hidden>Tomar foto</button>
+                            <button id="btnDeshacerBanda" class="btn" hidden>Deshacer banda</button>
+                            <button id="btnReiniciarLectura" class="btn" hidden><span data-i="refresh"></span>Empezar de nuevo</button>
                         </div>
+                        <input type="file" id="inputRes" accept="image/*" hidden>
                         <div class="inline-msg" id="errorRes" hidden></div>
+                        <p class="calc-note" id="ayudaRes" hidden style="margin-top:10px">Consejos: usa luz blanca y un fondo claro, acércate hasta que la resistencia ocupe casi todo el ancho y toca el centro de cada banda, no los brillos. Si un color sale mal, cámbialo en su lista.</p>
                         <div class="bandas-detectadas" id="bandasDetectadas"></div>
                         <div class="resultado-res" id="resultadoResistencia" hidden></div>
+                        <div class="tool-row" id="accionesRes" hidden>
+                            <button id="btnLeerIA" class="btn"><span data-i="ask"></span>Leer con IA</button>
+                            <button id="btnColoresMano" class="btn ghost">Elegir colores a mano</button>
+                        </div>
                     </div>
 
                     <!-- Bitácora -->
@@ -749,14 +772,20 @@
                         <h3>Bitácora de proyectos</h3>
                         <p>Fotografía tus avances. Desde cada foto puedes pedirle a la IA que revise el montaje.</p>
                         <div class="cam">
-                            <div class="cam-empty" id="camBitVacia">La cámara está apagada</div>
+                            <div class="cam-empty" id="camBitVacia">Enciende la cámara o sube una foto de tu proyecto</div>
                             <video id="videoBitacora" autoplay playsinline muted hidden></video>
                             <canvas id="canvasBitacora" hidden></canvas>
+                            <div class="cam-ctrl">
+                                <button class="cam-btn" id="btnLinternaBit" aria-label="Encender o apagar la linterna" title="Linterna" hidden><span data-i="zap"></span></button>
+                                <button class="cam-btn" id="btnCambiarBit" aria-label="Cambiar de cámara" title="Cambiar de cámara" hidden><span data-i="refresh"></span></button>
+                            </div>
                         </div>
                         <div class="tool-row">
                             <button id="btnIniciarCamaraBitacora" class="btn primary"><span data-i="camera"></span>Encender cámara</button>
+                            <button id="btnSubirBit" class="btn"><span data-i="image"></span>Subir foto</button>
                             <button id="btnCapturarFoto" class="btn primary" hidden>Capturar foto</button>
                         </div>
+                        <input type="file" id="inputBit" accept="image/*" hidden>
                         <div class="inline-msg" id="errorBit" hidden></div>
                         <div id="formCapturaBitacora" hidden style="margin-top:10px">
                             <textarea id="notaBitacora" class="textarea" rows="2" placeholder="Nota sobre la foto, por ejemplo: primer prototipo del sensor de luz"></textarea>
@@ -3000,130 +3029,329 @@ function pintarResultadoQuiz() {
 }
 
 // ============================================================
-// HERRAMIENTAS: LECTOR DE RESISTENCIAS
+// HERRAMIENTAS: CÁMARA COMPARTIDA (linterna, cambio de cámara, respaldo)
 // ============================================================
-function colorMasCercano(r, g, b) {
-    let mejor = COLORES_RESISTENCIA[0], menor = Infinity;
-    for (const c of COLORES_RESISTENCIA) {
-        const d = (r - c.rgb[0]) ** 2 + (g - c.rgb[1]) ** 2 + (b - c.rgb[2]) ** 2;
-        if (d < menor) { menor = d; mejor = c; }
+const camaras = {
+    res: { stream: null, frontal: false, linterna: false, btnL: 'btnLinternaRes', btnC: 'btnCambiarRes' },
+    bit: { stream: null, frontal: false, linterna: false, btnL: 'btnLinternaBit', btnC: 'btnCambiarBit' }
+};
+
+async function abrirCamara(tipo, videoEl, errorEl) {
+    errorEl.hidden = true;
+    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) || !window.isSecureContext) {
+        errorEl.textContent = 'Este navegador no permite usar la cámara aquí. Usa el botón "Subir foto".';
+        errorEl.hidden = false;
+        return null;
     }
-    return mejor;
+    const cam = camaras[tipo];
+    detenerStream(cam.stream);
+    try {
+        cam.stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: cam.frontal ? 'user' : 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+            audio: false
+        });
+        videoEl.srcObject = cam.stream;
+        await videoEl.play().catch(() => {});
+        configurarControles(tipo);
+        return cam.stream;
+    } catch (err) {
+        cam.stream = null;
+        errorEl.textContent = mensajeErrorCamara(err) + ' También puedes usar "Subir foto".';
+        errorEl.hidden = false;
+        return null;
+    }
 }
 
-let streamResistencia = null;
-let streamBitacora = null;
-let bandasSeleccionadas = [];
-let numBandasObjetivo = 4;
+function configurarControles(tipo) {
+    const cam = camaras[tipo];
+    const track = cam.stream && cam.stream.getVideoTracks()[0];
+    let caps = {};
+    try { caps = track && track.getCapabilities ? track.getCapabilities() : {}; } catch (e) {}
+    cam.linterna = false;
+    $(cam.btnL).classList.remove('on');
+    $(cam.btnL).hidden = !caps.torch;
+    $(cam.btnC).hidden = true;
+    navigator.mediaDevices.enumerateDevices()
+        .then(ds => { $(cam.btnC).hidden = ds.filter(d => d.kind === 'videoinput').length < 2; })
+        .catch(() => {});
+}
 
-const videoResistencia = $('videoCamara');
-const canvasResistencia = $('canvasCamara');
+function ocultarControles(tipo) {
+    $(camaras[tipo].btnL).hidden = true;
+    $(camaras[tipo].btnC).hidden = true;
+}
 
-async function iniciarStream(videoEl, errorEl) {
-    errorEl.hidden = true;
-    if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
-        errorEl.textContent = 'Este navegador no permite usar la cámara. Abre la app desde Chrome o Safari con https.';
-        errorEl.hidden = false;
-        return null;
-    }
+async function alternarLinterna(tipo) {
+    const cam = camaras[tipo];
+    const track = cam.stream && cam.stream.getVideoTracks()[0];
+    if (!track) return;
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
-        videoEl.srcObject = stream;
-        await videoEl.play().catch(() => {});
-        return stream;
-    } catch (err) {
-        errorEl.textContent = mensajeErrorCamara(err);
-        errorEl.hidden = false;
-        return null;
+        await track.applyConstraints({ advanced: [{ torch: !cam.linterna }] });
+        cam.linterna = !cam.linterna;
+        $(cam.btnL).classList.toggle('on', cam.linterna);
+    } catch (e) {
+        toast('Este celular no permite controlar la linterna desde el navegador.');
     }
+}
+
+function cerrarCamara(tipo) {
+    detenerStream(camaras[tipo].stream);
+    camaras[tipo].stream = null;
+    camaras[tipo].linterna = false;
+    ocultarControles(tipo);
 }
 
 function apagarCamarasHerramientas() {
-    // Apaga las cámaras en vivo; las imágenes ya congeladas o capturadas se conservan
-    const resEnVivo = !!streamResistencia;
-    const bitEnVivo = !!streamBitacora;
-    detenerStream(streamResistencia); streamResistencia = null;
-    detenerStream(streamBitacora); streamBitacora = null;
+    // Apaga las cámaras en vivo; las fotos ya tomadas o subidas se conservan
+    const resEnVivo = !!camaras.res.stream;
+    const bitEnVivo = !!camaras.bit.stream;
+    cerrarCamara('res');
+    cerrarCamara('bit');
     if (resEnVivo) reiniciarLectura();
     if (bitEnVivo) reiniciarBitacoraCamara();
 }
+// Si la app pasa a segundo plano, se libera la cámara para no gastar batería ni bloquearla
+document.addEventListener('visibilitychange', () => { if (document.hidden) apagarCamarasHerramientas(); });
 
-$('selectorBandas').addEventListener('change', e => { numBandasObjetivo = parseInt(e.target.value, 10); reiniciarLectura(); });
+async function leerArchivoImagen(input) {
+    const f = input.files && input.files[0];
+    input.value = '';
+    if (!f) return null;
+    if (!f.type.startsWith('image/')) { toast('El archivo debe ser una imagen.'); return null; }
+    const url = URL.createObjectURL(f);
+    try { return await cargarImagen(url); }
+    catch (e) { toast('No se pudo leer la imagen. Intenta con otra.'); return null; }
+    finally { setTimeout(() => URL.revokeObjectURL(url), 2000); }
+}
 
-$('btnIniciarCamara').addEventListener('click', async () => {
-    streamResistencia = await iniciarStream(videoResistencia, $('errorRes'));
-    if (!streamResistencia) return;
+// ============================================================
+// HERRAMIENTAS: LECTOR DE RESISTENCIAS
+// ============================================================
+const videoResistencia = $('videoCamara');
+const canvasResistencia = $('canvasCamara');
+const lienzoOriginal = document.createElement('canvas');   // copia limpia para leer colores sin las marcas
+let bandasSeleccionadas = [];
+let marcasBandas = [];
+let numBandasObjetivo = 4;
+
+const colorPorNombre = n => COLORES_RESISTENCIA.find(c => c.nombre === n);
+
+// Clasificación por tono, saturación y brillo (más estable que comparar RGB ante cambios de luz)
+function clasificarColor(r, g, b) {
+    const R = r / 255, G = g / 255, B = b / 255;
+    const max = Math.max(R, G, B), min = Math.min(R, G, B), d = max - min;
+    const v = max, s = max ? d / max : 0;
+    let h = 0;
+    if (d) {
+        if (max === R) h = 60 * (((G - B) / d) % 6);
+        else if (max === G) h = 60 * ((B - R) / d + 2);
+        else h = 60 * ((R - G) / d + 4);
+        if (h < 0) h += 360;
+    }
+    if (v < 0.22) return colorPorNombre('Negro');
+    if (s < 0.2) {
+        if (v > 0.85) return colorPorNombre('Blanco');
+        return v > 0.6 ? colorPorNombre('Plateado') : colorPorNombre('Gris');
+    }
+    if (h < 12 || h >= 340) return (v < 0.45) ? colorPorNombre('Marrón') : colorPorNombre('Rojo');
+    if (h < 38) {
+        if (v < 0.58) return colorPorNombre('Marrón');
+        return s > 0.55 ? colorPorNombre('Naranja') : colorPorNombre('Dorado');
+    }
+    if (h < 52) return (s < 0.6 || v < 0.75) ? colorPorNombre('Dorado') : colorPorNombre('Amarillo');
+    if (h < 72) return colorPorNombre('Amarillo');
+    if (h < 170) return colorPorNombre('Verde');
+    if (h < 255) return colorPorNombre('Azul');
+    return colorPorNombre('Violeta');
+}
+
+// Corrige colores imposibles según la posición de la banda
+function ajustarPorPosicion(color, idx, total) {
+    const esTolerancia = idx === total - 1;
+    const esMultiplicador = idx === total - 2;
+    if (esTolerancia) {
+        if (['Amarillo', 'Naranja'].includes(color.nombre)) return colorPorNombre('Dorado');
+        if (['Gris', 'Blanco'].includes(color.nombre)) return colorPorNombre('Plateado');
+        if (color.tol === null) return colorPorNombre('Dorado');
+        return color;
+    }
+    if (!esMultiplicador && color.digito === null) {
+        return color.nombre === 'Dorado' ? colorPorNombre('Amarillo') : colorPorNombre('Gris');
+    }
+    return color;
+}
+
+function opcionesBanda(idx, total) {
+    if (idx === total - 1) return COLORES_RESISTENCIA.filter(c => c.tol !== null);
+    if (idx === total - 2) return COLORES_RESISTENCIA;
+    return COLORES_RESISTENCIA.filter(c => c.digito !== null);
+}
+
+function mostrarImagenRes(fuente) {
+    const w = fuente.videoWidth || fuente.naturalWidth;
+    const h = fuente.videoHeight || fuente.naturalHeight;
+    if (!w || !h) { toast('No se pudo obtener la imagen. Intenta de nuevo.'); return; }
+    const escala = Math.min(1, 1600 / Math.max(w, h));
+    lienzoOriginal.width = Math.round(w * escala);
+    lienzoOriginal.height = Math.round(h * escala);
+    lienzoOriginal.getContext('2d', { willReadFrequently: true }).drawImage(fuente, 0, 0, lienzoOriginal.width, lienzoOriginal.height);
+    canvasResistencia.width = lienzoOriginal.width;
+    canvasResistencia.height = lienzoOriginal.height;
+    bandasSeleccionadas = [];
+    marcasBandas = [];
+    redibujarRes();
+    renderizarBandas();
+    $('resultadoResistencia').hidden = true;
+    cerrarCamara('res');
     $('camResVacia').hidden = true;
-    videoResistencia.hidden = false;
-    canvasResistencia.hidden = true;
-    $('btnIniciarCamara').hidden = true;
-    $('btnCongelar').hidden = false;
-    $('btnReiniciarLectura').hidden = false;
-});
-
-$('btnCongelar').addEventListener('click', () => {
-    canvasResistencia.width = videoResistencia.videoWidth;
-    canvasResistencia.height = videoResistencia.videoHeight;
-    canvasResistencia.getContext('2d', { willReadFrequently: true }).drawImage(videoResistencia, 0, 0);
+    $('guiaRes').hidden = true;
     videoResistencia.hidden = true;
     canvasResistencia.hidden = false;
+    $('btnIniciarCamara').hidden = true;
+    $('btnSubirRes').hidden = true;
     $('btnCongelar').hidden = true;
-    detenerStream(streamResistencia);
-    streamResistencia = null;
-    toast('Toca cada banda de color en orden');
-});
+    $('btnDeshacerBanda').hidden = false;
+    $('btnReiniciarLectura').hidden = false;
+    $('ayudaRes').hidden = false;
+    $('accionesRes').hidden = false;
+    toast(`Toca las ${numBandasObjetivo} bandas en orden, de izquierda a derecha`);
+}
+
+function redibujarRes() {
+    const ctx = canvasResistencia.getContext('2d');
+    ctx.drawImage(lienzoOriginal, 0, 0);
+    const r = Math.max(12, Math.round(canvasResistencia.width * 0.018));
+    marcasBandas.forEach((m, i) => {
+        ctx.beginPath(); ctx.arc(m.x, m.y, r, 0, Math.PI * 2);
+        ctx.lineWidth = Math.max(3, r / 4); ctx.strokeStyle = '#000'; ctx.stroke();
+        ctx.lineWidth = Math.max(2, r / 6); ctx.strokeStyle = '#fff'; ctx.stroke();
+        ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+        ctx.font = `bold ${Math.round(r * 1.1)}px sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.strokeText(String(i + 1), m.x, m.y - r * 1.9); ctx.fillText(String(i + 1), m.x, m.y - r * 1.9);
+    });
+}
+
+function leerColorEn(x, y) {
+    const rad = Math.max(3, Math.round(lienzoOriginal.width * 0.004));
+    const x0 = Math.max(0, x - rad), y0 = Math.max(0, y - rad);
+    const w = Math.min(rad * 2 + 1, lienzoOriginal.width - x0), h = Math.min(rad * 2 + 1, lienzoOriginal.height - y0);
+    const d = lienzoOriginal.getContext('2d', { willReadFrequently: true }).getImageData(x0, y0, w, h).data;
+    let r = 0, g = 0, b = 0, n = 0;
+    for (let k = 0; k < d.length; k += 4) {
+        const mx = Math.max(d[k], d[k + 1], d[k + 2]), mn = Math.min(d[k], d[k + 1], d[k + 2]);
+        if (mx > 240 && mx - mn < 25) continue;            // descarta brillos o reflejos
+        r += d[k]; g += d[k + 1]; b += d[k + 2]; n++;
+    }
+    if (!n) { for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; n++; } }
+    return clasificarColor(r / n, g / n, b / n);
+}
 
 canvasResistencia.addEventListener('click', e => {
-    if (bandasSeleccionadas.length >= numBandasObjetivo) return;
+    if (bandasSeleccionadas.length >= numBandasObjetivo) { toast('Ya marcaste todas las bandas. Usa "Deshacer banda" para corregir.'); return; }
     // El canvas usa object-fit: contain, así que se calcula el área real de la imagen
     const rect = canvasResistencia.getBoundingClientRect();
     const escala = Math.min(rect.width / canvasResistencia.width, rect.height / canvasResistencia.height);
-    const anchoImg = canvasResistencia.width * escala, altoImg = canvasResistencia.height * escala;
-    const offX = (rect.width - anchoImg) / 2, offY = (rect.height - altoImg) / 2;
+    const offX = (rect.width - canvasResistencia.width * escala) / 2, offY = (rect.height - canvasResistencia.height * escala) / 2;
     const x = Math.round((e.clientX - rect.left - offX) / escala);
     const y = Math.round((e.clientY - rect.top - offY) / escala);
     if (x < 0 || y < 0 || x >= canvasResistencia.width || y >= canvasResistencia.height) return;
-
-    // Promedio de un área de 5×5 píxeles para reducir el ruido
-    const ctx = canvasResistencia.getContext('2d', { willReadFrequently: true });
-    const x0 = Math.max(0, x - 2), y0 = Math.max(0, y - 2);
-    const d = ctx.getImageData(x0, y0, 5, 5).data;
-    let r = 0, g = 0, b = 0, n = 0;
-    for (let k = 0; k < d.length; k += 4) { r += d[k]; g += d[k + 1]; b += d[k + 2]; n++; }
-    const color = colorMasCercano(r / n, g / n, b / n);
-
-    bandasSeleccionadas.push(color);
+    const idx = bandasSeleccionadas.length;
+    bandasSeleccionadas.push(ajustarPorPosicion(leerColorEn(x, y), idx, numBandasObjetivo));
+    marcasBandas.push({ x, y });
+    redibujarRes();
     renderizarBandas();
-    if (bandasSeleccionadas.length === numBandasObjetivo) {
-        const res = calcularResistencia(bandasSeleccionadas);
-        const out = $('resultadoResistencia');
-        out.textContent = res
-            ? formatearResistencia(res.valor) + (res.tolerancia !== null ? ` ±${res.tolerancia}%` : '')
-            : 'Combinación no válida. Reinicia y toca las bandas de nuevo.';
-        out.hidden = false;
-    }
 });
 
 function renderizarBandas() {
-    $('bandasDetectadas').innerHTML = bandasSeleccionadas.map(c =>
-        `<span class="banda-pill"><i style="background:${rgbCss(c)}"></i>${c.nombre}</span>`).join('');
+    $('bandasDetectadas').innerHTML = bandasSeleccionadas.map((c, i) => `
+        <label class="banda-sel" title="Banda ${i + 1}"><b>${i + 1}</b><i style="background:${rgbCss(c)}"></i>
+            <select data-banda-idx="${i}" aria-label="Color de la banda ${i + 1}">
+                ${opcionesBanda(i, numBandasObjetivo).map(o => `<option ${o.nombre === c.nombre ? 'selected' : ''}>${o.nombre}</option>`).join('')}
+            </select></label>`).join('');
+    actualizarResultadoRes();
+}
+
+$('bandasDetectadas').addEventListener('change', e => {
+    const sel = e.target.closest('[data-banda-idx]');
+    if (!sel) return;
+    bandasSeleccionadas[+sel.dataset.bandaIdx] = colorPorNombre(sel.value);
+    renderizarBandas();
+});
+
+function actualizarResultadoRes() {
+    const out = $('resultadoResistencia');
+    if (bandasSeleccionadas.length < numBandasObjetivo) {
+        out.hidden = !bandasSeleccionadas.length;
+        out.textContent = bandasSeleccionadas.length ? `Banda ${bandasSeleccionadas.length} de ${numBandasObjetivo}` : '';
+        return;
+    }
+    const res = calcularResistencia(bandasSeleccionadas);
+    out.textContent = res
+        ? formatearResistencia(res.valor) + (res.tolerancia !== null ? ` ±${res.tolerancia}%` : '')
+        : 'Combinación no válida: revisa los colores';
+    out.hidden = false;
 }
 
 function reiniciarLectura() {
     bandasSeleccionadas = [];
+    marcasBandas = [];
     renderizarBandas();
     $('resultadoResistencia').hidden = true;
-    $('resultadoResistencia').textContent = '';
+    cerrarCamara('res');
     canvasResistencia.hidden = true;
     videoResistencia.hidden = true;
+    $('guiaRes').hidden = true;
     $('camResVacia').hidden = false;
     $('btnIniciarCamara').hidden = false;
+    $('btnSubirRes').hidden = false;
     $('btnCongelar').hidden = true;
+    $('btnDeshacerBanda').hidden = true;
     $('btnReiniciarLectura').hidden = true;
-    detenerStream(streamResistencia);
-    streamResistencia = null;
+    $('ayudaRes').hidden = true;
+    $('accionesRes').hidden = true;
+    $('errorRes').hidden = true;
 }
+
+$('selectorBandas').addEventListener('change', e => {
+    numBandasObjetivo = parseInt(e.target.value, 10);
+    if (!canvasResistencia.hidden) { bandasSeleccionadas = []; marcasBandas = []; redibujarRes(); renderizarBandas(); }
+});
+
+$('btnIniciarCamara').addEventListener('click', async () => {
+    const stream = await abrirCamara('res', videoResistencia, $('errorRes'));
+    if (!stream) return;
+    $('camResVacia').hidden = true;
+    videoResistencia.hidden = false;
+    canvasResistencia.hidden = true;
+    $('guiaRes').hidden = false;
+    $('btnIniciarCamara').hidden = true;
+    $('btnSubirRes').hidden = true;
+    $('btnCongelar').hidden = false;
+    $('btnReiniciarLectura').hidden = false;
+    $('ayudaRes').hidden = false;
+});
+$('btnCongelar').addEventListener('click', () => mostrarImagenRes(videoResistencia));
+$('btnSubirRes').addEventListener('click', () => $('inputRes').click());
+$('inputRes').addEventListener('change', async () => { const img = await leerArchivoImagen($('inputRes')); if (img) mostrarImagenRes(img); });
+$('btnDeshacerBanda').addEventListener('click', () => { bandasSeleccionadas.pop(); marcasBandas.pop(); redibujarRes(); renderizarBandas(); });
 $('btnReiniciarLectura').addEventListener('click', reiniciarLectura);
+$('btnLinternaRes').addEventListener('click', () => alternarLinterna('res'));
+$('btnCambiarRes').addEventListener('click', async () => { camaras.res.frontal = !camaras.res.frontal; await abrirCamara('res', videoResistencia, $('errorRes')); });
+
+// Respaldo con IA: envía la foto al chat para que la IA lea las bandas
+$('btnLeerIA').addEventListener('click', async () => {
+    if (!API_URL) { toast('La lectura con IA necesita la conexión con el servidor.'); return; }
+    const dataUrl = lienzoOriginal.toDataURL('image/jpeg', 0.9);
+    nuevoChat();
+    await prepararAdjunto(dataUrl);
+    enviar(`Identifica los colores de las bandas de esta resistencia, en orden, y dime su valor y tolerancia. Es una resistencia de ${numBandasObjetivo} bandas. Si la foto no es clara, dime cómo tomarla mejor.`);
+});
+$('btnColoresMano').addEventListener('click', () => {
+    mostrarVista('calc');
+    calcActual = 'colores';
+    renderCalcMenu();
+    renderCalc();
+});
 
 // ============================================================
 // HERRAMIENTAS: BITÁCORA DE PROYECTOS
@@ -3133,39 +3361,53 @@ const canvasBitacora = $('canvasBitacora');
 const CLAVE_BITACORA = 'circuitia_bitacora';
 let fotoCapturadaDataURL = null;
 
+function mostrarFotoBitacora(fuente) {
+    fotoCapturadaDataURL = redimensionar(fuente, 1024, 0.75);
+    const w = fuente.videoWidth || fuente.naturalWidth, h = fuente.videoHeight || fuente.naturalHeight;
+    canvasBitacora.width = w;
+    canvasBitacora.height = h;
+    canvasBitacora.getContext('2d').drawImage(fuente, 0, 0, w, h);
+    cerrarCamara('bit');
+    $('camBitVacia').hidden = true;
+    videoBitacora.hidden = true;
+    canvasBitacora.hidden = false;
+    $('btnCapturarFoto').hidden = true;
+    $('btnIniciarCamaraBitacora').hidden = true;
+    $('btnSubirBit').hidden = true;
+    $('formCapturaBitacora').hidden = false;
+    $('notaBitacora').focus();
+}
+
 $('btnIniciarCamaraBitacora').addEventListener('click', async () => {
-    streamBitacora = await iniciarStream(videoBitacora, $('errorBit'));
-    if (!streamBitacora) return;
+    const stream = await abrirCamara('bit', videoBitacora, $('errorBit'));
+    if (!stream) return;
     $('camBitVacia').hidden = true;
     videoBitacora.hidden = false;
     canvasBitacora.hidden = true;
     $('btnIniciarCamaraBitacora').hidden = true;
+    $('btnSubirBit').hidden = true;
     $('btnCapturarFoto').hidden = false;
 });
-
 $('btnCapturarFoto').addEventListener('click', () => {
-    fotoCapturadaDataURL = redimensionar(videoBitacora, 1024, 0.75);
-    canvasBitacora.width = videoBitacora.videoWidth;
-    canvasBitacora.height = videoBitacora.videoHeight;
-    canvasBitacora.getContext('2d').drawImage(videoBitacora, 0, 0);
-    videoBitacora.hidden = true;
-    canvasBitacora.hidden = false;
-    detenerStream(streamBitacora);
-    streamBitacora = null;
-    $('btnCapturarFoto').hidden = true;
-    $('formCapturaBitacora').hidden = false;
-    $('notaBitacora').focus();
+    if (!videoBitacora.videoWidth) { toast('La cámara aún se está iniciando. Intenta de nuevo.'); return; }
+    mostrarFotoBitacora(videoBitacora);
 });
+$('btnSubirBit').addEventListener('click', () => $('inputBit').click());
+$('inputBit').addEventListener('change', async () => { const img = await leerArchivoImagen($('inputBit')); if (img) mostrarFotoBitacora(img); });
+$('btnLinternaBit').addEventListener('click', () => alternarLinterna('bit'));
+$('btnCambiarBit').addEventListener('click', async () => { camaras.bit.frontal = !camaras.bit.frontal; await abrirCamara('bit', videoBitacora, $('errorBit')); });
 
 function reiniciarBitacoraCamara() {
     fotoCapturadaDataURL = null;
     $('notaBitacora').value = '';
     $('formCapturaBitacora').hidden = true;
+    cerrarCamara('bit');
     canvasBitacora.hidden = true;
     videoBitacora.hidden = true;
     $('camBitVacia').hidden = false;
     $('btnCapturarFoto').hidden = true;
     $('btnIniciarCamaraBitacora').hidden = false;
+    $('btnSubirBit').hidden = false;
 }
 
 $('btnGuardarBitacora').addEventListener('click', () => {
