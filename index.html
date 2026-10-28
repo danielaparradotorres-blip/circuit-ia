@@ -266,6 +266,31 @@
         .burbuja { position: absolute; left: 50%; bottom: calc(50% + 62px); transform: translate(-50%, 6px); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 7px 14px; font-size: 14px; font-weight: 500; white-space: nowrap; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s; }
         .burbuja::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 12px; height: 12px; background: var(--surface); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); transform: translateX(-50%) rotate(45deg); }
         .burbuja.show { opacity: 1; transform: translate(-50%, 0); }
+        .hero-logo img { transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .18s ease-out; }
+        .hero-traza .led { --led: var(--copper); transition: fill .2s; animation: led 2.8s ease-in-out 1.6s infinite; }
+        .hero-traza .led.l2 { animation-delay: 2.3s; }
+        .hero-traza .led.l3 { animation-delay: 3s; }
+        @keyframes led { 0%, 100% { fill: var(--bg); } 6% { fill: var(--led); filter: drop-shadow(0 0 4px var(--led)); } 22% { fill: var(--bg); } }
+        .hero-traza .led.flash { animation: flash .6s ease; fill: var(--led); }
+        @keyframes flash { 0% { fill: var(--led); r: 12; } 100% { fill: var(--led); r: 7; } }
+        .hero-traza .toques circle { fill: transparent; cursor: pointer; }
+        .hero-circuito.energizado .pulso { animation-duration: 1s; stroke-width: 4.5; filter: drop-shadow(0 0 3px var(--mask)); }
+        .hero-circuito.energizado .hero-logo img { box-shadow: 0 0 0 4px var(--bg), 0 0 26px 6px rgba(46,155,60,.55); }
+        .hero-rol { font-family: var(--mono); font-size: 17px !important; color: var(--mask) !important; margin: -2px 0 10px !important; min-height: 26px; }
+        .escribe { border-right: 2px solid var(--copper); padding-right: 2px; animation: cursor .9s steps(1) infinite; }
+        @keyframes cursor { 50% { border-color: transparent; } }
+        .sug { opacity: 0; animation: aparecer .45s ease forwards; animation-delay: var(--d, 0s); }
+        .sug:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+        .sug { transition: border-color .15s, transform .15s, box-shadow .15s; }
+        @keyframes aparecer { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        .dato { display: flex; align-items: center; gap: 14px; margin-top: 14px; padding: 14px 16px; border-radius: 12px; background: var(--copper-soft); border: 1px solid var(--line); opacity: 0; animation: aparecer .45s ease .7s forwards; }
+        .dato-ic { width: 40px; height: 40px; border-radius: 50%; background: var(--copper); color: #fff; display: grid; place-items: center; flex: none; }
+        .dato-txt { flex: 1; min-width: 0; }
+        .dato-txt span { font-size: 12px; font-weight: 700; color: var(--copper); text-transform: uppercase; letter-spacing: .05em; }
+        .dato-txt p { margin: 2px 0 0 !important; font-size: 14.5px !important; color: var(--ink) !important; }
+        .dato-txt p.entra { animation: aparecer .35s ease; }
+        .dato .btn { flex: none; }
+        @media (max-width: 600px) { .dato { flex-wrap: wrap; } .dato .btn { width: 100%; } }
         .avatar.logo { background: transparent; overflow: hidden; }
         .avatar.logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .typing .avatar.logo { animation: pensando 1.1s ease-in-out infinite; border-radius: 8px; }
@@ -556,6 +581,8 @@
             *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
             .hero-traza .t { stroke-dashoffset: 0; }
             .hero-traza .pulso { display: none; }
+            .sug, .dato { opacity: 1 !important; }
+            .escribe { border: 0; }
         }
 
         /* ============================================================
@@ -1916,6 +1943,46 @@ function avatarHTML() {
     return `<div class="avatar logo"><img src="icons/icon-192.png" alt="" onerror="const a=this.parentNode;a.classList.remove('logo');a.innerHTML=icon('chip')"></div>`;
 }
 
+// Datos curiosos de electrónica
+const DATOS = [
+    'El LED tiene polaridad: la pata larga es el ánodo (+) y la corta el cátodo (−).',
+    'Cada pin del Arduino UNO soporta como máximo 40 mA, pero lo recomendado es no pasar de 20 mA.',
+    'Una corriente de unos 30 mA a través del cuerpo ya puede ser peligrosa.',
+    'En una resistencia de 4 bandas, la banda dorada indica una tolerancia de ±5%.',
+    'Un capacitor se carga al 63% en una constante de tiempo: τ = R × C.',
+    'El primer transistor se construyó en 1947 en los Laboratorios Bell.',
+    'En una protoboard, cada fila de 5 agujeros a un lado del canal central está conectada por dentro.',
+    'El sensor HC-SR04 mide distancias de 2 a 400 cm con ultrasonido de 40 kHz.',
+    'El PWM simula voltajes intermedios encendiendo y apagando muy rápido: en la mayoría de pines del Arduino UNO, unos 490 veces por segundo.',
+    'Georg Simon Ohm publicó la ley de Ohm en 1827.',
+    'En Colombia la red eléctrica de las casas es de 120 V a 60 Hz.',
+    'El convertidor analógico del Arduino UNO es de 10 bits: traduce de 0 a 5 V en valores de 0 a 1023.'
+];
+let datoIdx = Math.floor(Math.random() * DATOS.length);
+
+// Texto que se escribe solo bajo el saludo
+const ROLES = ['tutor de electrónica', 'asistente para Arduino', 'revisor de circuitos', 'calculadora que explica', 'compañero de taller 24/7'];
+let rolIdx = 0, rolPos = ROLES[0].length, rolBorrando = true;
+const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+function animarRol() {
+    const el = $('heroRol');
+    let espera = 70;
+    if (el && !sinMovimiento) {
+        const palabra = ROLES[rolIdx];
+        if (rolBorrando) {
+            rolPos--;
+            espera = 35;
+            if (rolPos <= 0) { rolBorrando = false; rolIdx = (rolIdx + 1) % ROLES.length; espera = 300; }
+        } else {
+            rolPos++;
+            if (rolPos >= ROLES[rolIdx].length) { rolBorrando = true; espera = 2200; }
+        }
+        el.textContent = ROLES[rolIdx].slice(0, Math.max(0, rolPos)) || '\u200b';
+    }
+    setTimeout(animarRol, el ? espera : 1000);
+}
+setTimeout(animarRol, 2600);
+
 // Interacción del logo en la bienvenida
 const SALUDOS = ['¡Hola! Soy Circuit IA 👋', 'Pregúntame lo que quieras de electrónica', 'También puedo revisar fotos de tu circuito', 'Prueba los esquemas de conexión', '¡Vamos a armar algo genial!'];
 let saludoIdx = 0, burbujaTimer = null;
@@ -1927,7 +1994,44 @@ function mostrarBurbuja(texto) {
     clearTimeout(burbujaTimer);
     burbujaTimer = setTimeout(() => b.classList.remove('show'), 3200);
 }
+// El robot se inclina hacia el cursor o el dedo
+chatContainer.addEventListener('pointermove', e => {
+    const zona = e.target.closest('.hero');
+    const logo = $('heroLogo');
+    if (!zona || !logo || sinMovimiento) return;
+    const r = logo.getBoundingClientRect();
+    const dx = (e.clientX - (r.left + r.width / 2)) / Math.max(200, window.innerWidth / 2);
+    const dy = (e.clientY - (r.top + r.height / 2)) / Math.max(200, window.innerHeight / 2);
+    logo.style.setProperty('--ry', `${Math.max(-1, Math.min(1, dx)) * 22}deg`);
+    logo.style.setProperty('--rx', `${Math.max(-1, Math.min(1, dy)) * -22}deg`);
+});
+chatContainer.addEventListener('pointerleave', () => {
+    const logo = $('heroLogo');
+    if (logo) { logo.style.setProperty('--rx', '0deg'); logo.style.setProperty('--ry', '0deg'); }
+});
+
+// LEDs del circuito que cambian de color al tocarlos
+const COLORES_LED = ['#2E9B3C', '#E53935', '#1E88E5', '#FDD835', '#8E24AA'];
+const estadoLed = [0, 0, 0, 0, 0, 0];
+
 chatContainer.addEventListener('click', e => {
+    const toque = e.target.closest('[data-led]');
+    if (toque) {
+        const n = +toque.dataset.led;
+        estadoLed[n] = (estadoLed[n] + 1) % COLORES_LED.length;
+        const led = document.querySelectorAll('.hero-traza .led')[n];
+        if (led) { led.style.setProperty('--led', COLORES_LED[estadoLed[n]]); led.classList.remove('flash'); void led.getBoundingClientRect(); led.classList.add('flash'); }
+        mostrarBurbuja('¡Encendiste un LED! 💡');
+        return;
+    }
+    if (e.target.closest('#btnOtroDato')) {
+        const t = $('datoTexto');
+        datoIdx = (datoIdx + 1) % DATOS.length;
+        t.classList.remove('entra'); void t.offsetWidth;
+        t.textContent = DATOS[datoIdx];
+        t.classList.add('entra');
+        return;
+    }
     const logo = e.target.closest('#heroLogo');
     if (!logo) return;
     logo.classList.remove('salta');
@@ -1957,8 +2061,14 @@ function heroHTML() {
                     <path class="pulso" d="M624 60 H350"/>
                     <path class="pulso p3" d="M624 100 H470 L440 70 H350"/>
                 </g>
-                <circle class="pad" cx="16" cy="20" r="7"/><circle class="pad" cx="16" cy="60" r="7"/><circle class="pad" cx="16" cy="100" r="7"/>
-                <circle class="pad" cx="624" cy="20" r="7"/><circle class="pad" cx="624" cy="60" r="7"/><circle class="pad" cx="624" cy="100" r="7"/>
+                <g class="leds">
+                    <circle class="pad led l1" cx="16" cy="20" r="7"/><circle class="pad led l2" cx="16" cy="60" r="7"/><circle class="pad led l3" cx="16" cy="100" r="7"/>
+                    <circle class="pad led l2" cx="624" cy="20" r="7"/><circle class="pad led l1" cx="624" cy="60" r="7"/><circle class="pad led l3" cx="624" cy="100" r="7"/>
+                </g>
+                <g class="toques">
+                    <circle data-led="0" cx="16" cy="20" r="20"/><circle data-led="1" cx="16" cy="60" r="20"/><circle data-led="2" cx="16" cy="100" r="20"/>
+                    <circle data-led="3" cx="624" cy="20" r="20"/><circle data-led="4" cx="624" cy="60" r="20"/><circle data-led="5" cx="624" cy="100" r="20"/>
+                </g>
             </svg>
             <button class="hero-logo" id="heroLogo" aria-label="Saludar a Circuit IA" title="Tócame">
                 <img src="icons/icon-192.png" alt="Logo de Circuit IA" onerror="this.parentNode.classList.add('sin-img');this.remove()">
@@ -1966,11 +2076,18 @@ function heroHTML() {
             <div class="burbuja" id="heroBurbuja" role="status"></div>
         </div>
         <h2>Hola, soy Circuit IA</h2>
-        <p>Tu tutor de electrónica. Pregúntame sobre circuitos, componentes, cálculos o Arduino, o envíame una foto de tu montaje y lo revisamos juntos.</p>
+        <p class="hero-rol">Tu <span id="heroRol" class="escribe">tutor de electrónica</span></p>
+        <p>Pregúntame sobre circuitos, componentes, cálculos o Arduino, o envíame una foto de tu montaje y lo revisamos juntos.</p>
         <div class="sugerencias">
             ${SUGERENCIAS.map((s, i) => `
-                <button class="sug" data-sug="${i}">${icon(s.icono)}<div><span>${s.cat}</span><strong>${s.q}</strong></div></button>`).join('')}
+                <button class="sug" data-sug="${i}" style="--d:${0.15 + i * 0.08}s">${icon(s.icono)}<div><span>${s.cat}</span><strong>${s.q}</strong></div></button>`).join('')}
         </div>
+        <div class="dato" id="datoCurioso">
+            <div class="dato-ic">${icon('bulb')}</div>
+            <div class="dato-txt"><span>¿Sabías que…?</span><p id="datoTexto">${DATOS[datoIdx % DATOS.length]}</p></div>
+            <button class="btn sm" id="btnOtroDato">${icon('refresh')}Otro dato</button>
+        </div>
+    
     </div>`;
 }
 
@@ -2106,6 +2223,16 @@ function autoResize() {
     actualizarBotonEnviar();
 }
 userInput.addEventListener('input', autoResize);
+// Mientras el estudiante escribe, el circuito de la bienvenida se "energiza"
+let energiaTimer = null, yaSaludoEscritura = false;
+userInput.addEventListener('input', () => {
+    const c = document.querySelector('.hero-circuito');
+    if (!c) return;
+    c.classList.add('energizado');
+    clearTimeout(energiaTimer);
+    energiaTimer = setTimeout(() => c.classList.remove('energizado'), 1400);
+    if (!yaSaludoEscritura && userInput.value.trim().length > 2) { yaSaludoEscritura = true; mostrarBurbuja('Te escucho… ✍️'); }
+});
 userInput.addEventListener('keydown', e => {
     const tactil = matchMedia('(pointer: coarse)').matches;
     if (e.key === 'Enter' && !e.shiftKey && !tactil && !e.isComposing) {
@@ -3115,9 +3242,41 @@ function responderQuiz(i) {
     $('btnSiguiente').focus();
 }
 
+// Celebración con confeti en los colores de la marca
+function lanzarConfeti() {
+    if (sinMovimiento) return;
+    const cv = document.createElement('canvas');
+    cv.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:300';
+    document.body.appendChild(cv);
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+    const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+    const colores = ['#0E5A48', '#2E9B3C', '#C17A3A', '#1E88E5', '#FDD835'];
+    const piezas = Array.from({ length: 140 }, () => ({
+        x: innerWidth / 2 + (Math.random() - 0.5) * 120, y: innerHeight * 0.35,
+        vx: (Math.random() - 0.5) * 14, vy: -Math.random() * 13 - 4,
+        r: Math.random() * 6 + 4, a: Math.random() * Math.PI, va: (Math.random() - 0.5) * 0.3,
+        c: colores[Math.floor(Math.random() * colores.length)]
+    }));
+    const inicio = performance.now();
+    (function cuadro(t) {
+        const dt = t - inicio;
+        ctx.clearRect(0, 0, innerWidth, innerHeight);
+        piezas.forEach(p => {
+            p.vy += 0.35; p.x += p.vx; p.y += p.vy; p.a += p.va; p.vx *= 0.99;
+            ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.a);
+            ctx.globalAlpha = Math.max(0, 1 - dt / 2600);
+            ctx.fillStyle = p.c; ctx.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2);
+            ctx.restore();
+        });
+        if (dt < 2600) requestAnimationFrame(cuadro); else cv.remove();
+    })(inicio);
+}
+
 function pintarResultadoQuiz() {
     const total = quiz.preguntas.length;
     const pct = quiz.aciertos / total;
+    if (pct >= 0.8) setTimeout(lanzarConfeti, 250);
     const mensaje = pct === 1 ? 'Excelente, dominas este tema.' : pct >= 0.6 ? 'Buen trabajo. Repasa las que fallaste y quedarás listo.' : 'Vas en camino. Repasa el tema con la IA y vuelve a intentarlo.';
     $('quizRoot').innerHTML = `
         <div class="quiz-card">
